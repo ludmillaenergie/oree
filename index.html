@@ -358,20 +358,24 @@ body {
 #v-accueil .more:hover { color: #E6C45A; }
 #v-accueil :focus-visible { outline-color: #D4AF37; }
 
-/* Orée : écran Poser compact, le bouton Commencer reste visible sur téléphone */
-#v-poser { gap: 12px; }
-#v-poser h2 { font-size: 38px; line-height: 1.05; }
-#v-poser .lead, #v-poser #pick-desc { margin: 0; }
-#v-poser .breath { display: contents; }
-#v-poser .orb-box, #v-poser .orb { width: 156px; height: 156px; }
-#v-poser .orb-box { align-self: center; margin-top: 4px; }
-#v-poser .orb-label { font-size: 26px; }
-#v-poser .count { text-align: center; min-height: 1.2em; margin: 0; }
-#v-poser .row {
-  position: sticky; bottom: 0; z-index: 5; justify-content: center;
-  padding: 18px 0 14px;
-  background: linear-gradient(to bottom, rgba(33,29,26,0), #211D1A 45%);
+/* Orée : fenêtre d'une respiration */
+.sheet {
+  position: fixed; inset: 0; z-index: 50; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background:
+    radial-gradient(520px 420px at 108% -6%, rgba(236,160,64,.45) 0%, rgba(214,134,50,.24) 30%, rgba(33,29,26,0) 100%),
+    #211D1A;
+  color: #F5E9DA;
 }
+.sheet[hidden] { display: none; }
+.sheet-in { max-width: 520px; margin: 0 auto; min-height: 100%; padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 14px; }
+.sheet h3 { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 42px; line-height: 1.05; color: var(--ink); margin: 0; }
+.sheet p { margin: 0; }
+.sheet .orb-box { align-self: center; width: 200px; height: 200px; margin-top: 8px; }
+.sheet .orb { width: 200px; height: 200px; }
+.sheet .orb-label { font-size: 30px; }
+.sheet .count { text-align: center; color: var(--muted); font-size: 15px; min-height: 1.4em; }
+.sheet-actions { position: sticky; bottom: 0; margin-top: auto; justify-content: center; padding: 16px 0 10px; background: linear-gradient(to bottom, rgba(33,29,26,0), #211D1A 40%); }
+#b-sound { min-width: 110px; }
 /* Orée : bouton Urgence, rouge, en un geste */
 .urgence {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
@@ -427,27 +431,33 @@ body {
   <section class="view" id="v-poser" hidden>
     <button class="back" data-go="accueil">← Retour</button>
     <h2>Poser</h2>
-    <p class="lead">Choisis une respiration. Le cercle guide le rythme.</p>
+    <p class="lead">Choisis une respiration. Elle s'ouvre avec son explication et le cercle qui guide ton souffle.</p>
     <button class="urgence" id="b-urgence" type="button" aria-label="Urgence : respirer tout de suite">
       <span class="u-main">Urgence</span>
       <span class="u-sub">Respirer tout de suite</span>
     </button>
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
-    <p id="pick-desc"></p>
-    <p class="small" id="urg-note" hidden>Si ça ne passe pas, parle à quelqu'un près de toi ou appelle un service d'aide.</p>
-    <p class="small" id="pick-warn" hidden>Si la tête tourne, revenir à une respiration naturelle. Chacun va à son rythme.</p>
-    <div class="breath">
+  </section>
+
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+    <div class="sheet-in">
+      <button class="back" id="b-close" type="button">← Fermer</button>
+      <h3 id="sheet-title"></h3>
+      <p id="pick-desc"></p>
+      <p class="small" id="urg-note" hidden>Si ça ne passe pas, parle à quelqu'un près de toi ou appelle un service d'aide.</p>
+      <p class="small" id="pick-warn" hidden>Si la tête tourne, revenir à une respiration naturelle. Chacun va à son rythme.</p>
       <div class="orb-box">
         <div class="orb-ring"></div>
         <div class="orb" id="orb"></div>
         <div class="orb-label" id="orb-label" aria-live="polite">Prêt</div>
       </div>
       <div class="count" id="count"></div>
-      <div class="row">
+      <div class="row sheet-actions">
         <button class="btn" id="b-start">Commencer</button>
+        <button class="btn ghost" id="b-sound" type="button" aria-pressed="true">Son : oui</button>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- Éclairer -->
   <section class="view" id="v-eclairer" hidden>
@@ -535,7 +545,7 @@ body {
   function show(name) {
     if (views.indexOf(name) < 0) name = "accueil";
     views.forEach(function (v) { $("v-" + v).hidden = (v !== name); });
-    if (name !== "poser") stopBreath(true);
+    if (name !== "poser") { stopBreath(true); if (!$("sheet").hidden) closeSheet(); }
     if (name !== "ecouter") stopAll();
     $("foot").textContent = "";
     window.scrollTo(0, 0);
@@ -578,6 +588,7 @@ body {
   function stopBreath(silent) {
     running = false;
     clearTimeout(timer);
+    stopSound();
     setOrb(.5, 600);
     $("b-start").textContent = "Commencer";
     if (silent) { $("orb-label").textContent = "Prêt"; $("count").textContent = ""; }
@@ -600,6 +611,7 @@ body {
       $("orb-label").textContent = ph.l;
       $("count").textContent = cycle + " sur " + pat.cycles;
       setOrb(ph.s, ph.ms);
+      playPhaseSound(ph.l, ph.ms);
       timer = setTimeout(function () {
         i++;
         if (i >= pat.phases.length) { i = 0; cycle++; if (cycle > pat.cycles) { finish(); return; } }
@@ -612,30 +624,112 @@ body {
   function showDesc() { $("pick-desc").textContent = pat.desc; $("pick-warn").hidden = !pat.hold; $("urg-note").hidden = !pat.urgent; }
   (function buildPicks() {
     var picks = $("picks");
-    PATTERNS.forEach(function (p, idx) {
+    PATTERNS.forEach(function (p) {
       var b = document.createElement("button");
-      b.className = "chip"; b.textContent = p.name;
-      b.setAttribute("aria-pressed", idx === 0 ? "true" : "false");
-      b.addEventListener("click", function () {
-        pat = p;
-        Array.prototype.forEach.call(picks.children, function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
-        stopBreath(true);
-        showDesc();
-      });
+      b.className = "chip"; b.type = "button"; b.textContent = p.name;
+      b.addEventListener("click", function () { openSheet(p, false); });
       picks.appendChild(b);
     });
-    showDesc();
   })();
+  $("b-urgence").addEventListener("click", function () { openSheet(URGENCE, true); });
 
-  $("b-urgence").addEventListener("click", function () {
-    pat = URGENCE;
-    Array.prototype.forEach.call($("picks").children, function (o) { o.setAttribute("aria-pressed", "false"); });
+  // Fenêtre d'une respiration
+  var lastFocus = null;
+  function openSheet(p, autostart) {
+    pat = p;
     stopBreath(true);
+    $("sheet-title").textContent = p.name;
     showDesc();
-    startBreath();
-    var o = document.querySelector("#v-poser .orb-box");
-    if (o && o.scrollIntoView) { try { o.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { o.scrollIntoView(); } }
+    lastFocus = document.activeElement;
+    $("sheet").hidden = false;
+    $("sheet").scrollTop = 0;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    $("b-close").focus();
+    if (autostart) startBreath();
+  }
+  function closeSheet() {
+    stopBreath(true);
+    $("sheet").hidden = true;
+    document.body.style.overflow = "";
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+  }
+  function requestClose() {
+    if (history.state && history.state.sheet) history.back(); else closeSheet();
+  }
+  $("b-close").addEventListener("click", requestClose);
+  window.addEventListener("popstate", function () { if (!$("sheet").hidden) closeSheet(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("sheet").hidden) requestClose(); });
+
+  // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)
+  var audioCtx = null, noiseBuf = null, curSnd = null, soundOn = true;
+  try { soundOn = localStorage.getItem("oree-son") !== "off"; } catch (e) {}
+  function paintSound() { var b = $("b-sound"); b.textContent = soundOn ? "Son : oui" : "Son : non"; b.setAttribute("aria-pressed", soundOn ? "true" : "false"); }
+  paintSound();
+  $("b-sound").addEventListener("click", function () {
+    soundOn = !soundOn;
+    try { localStorage.setItem("oree-son", soundOn ? "on" : "off"); } catch (e) {}
+    paintSound();
+    if (!soundOn) stopSound();
   });
+  function getCtx() {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+  function noiseBuffer(ctx) {
+    if (noiseBuf && noiseBuf.sampleRate === ctx.sampleRate) return noiseBuf;
+    var len = ctx.sampleRate * 3, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    var b0 = 0, b1 = 0, b2 = 0;
+    for (var i = 0; i < len; i++) {
+      var w = Math.random() * 2 - 1;
+      b0 = .99765 * b0 + w * .0990460; b1 = .96300 * b1 + w * .2965164; b2 = .57000 * b2 + w * 1.0526913;
+      d[i] = (b0 + b1 + b2 + w * .1848) * .18;
+    }
+    noiseBuf = buf; return buf;
+  }
+  function breathSound(ctx, kind, ms, t0) {
+    var dur = ms / 1000, src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = noiseBuffer(ctx); src.loop = true;
+    bp.type = "bandpass"; bp.Q.value = .9;
+    g.gain.setValueAtTime(.0001, t0);
+    if (kind === "in") {
+      bp.frequency.setValueAtTime(350, t0); bp.frequency.exponentialRampToValueAtTime(1500, t0 + dur);
+      g.gain.linearRampToValueAtTime(.03, t0 + .25); g.gain.exponentialRampToValueAtTime(.6, t0 + dur * .9); g.gain.linearRampToValueAtTime(.0001, t0 + dur);
+    } else {
+      bp.frequency.setValueAtTime(1300, t0); bp.frequency.exponentialRampToValueAtTime(300, t0 + dur);
+      g.gain.exponentialRampToValueAtTime(.6, t0 + Math.min(.5, dur * .15)); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    }
+    src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+    src.start(t0, Math.random() * 1.5); src.stop(t0 + dur + .05);
+    return { src: src, g: g };
+  }
+  function stopSound() {
+    if (!curSnd || !audioCtx) { curSnd = null; return; }
+    try {
+      var t = audioCtx.currentTime;
+      curSnd.g.gain.cancelScheduledValues(t);
+      curSnd.g.gain.setTargetAtTime(.0001, t, .06);
+      curSnd.src.stop(t + .4);
+    } catch (e) {}
+    curSnd = null;
+  }
+  function soundKind(label) {
+    if (/^(Inspire|Encore)/.test(label)) return "in";
+    if (/^Expire/.test(label)) return "out";
+    return null;
+  }
+  function playPhaseSound(label, ms) {
+    stopSound();
+    if (!soundOn) return;
+    var k = soundKind(label), ctx = getCtx();
+    if (!k || !ctx) return;
+    try { curSnd = breathSound(ctx, k, ms, ctx.currentTime + .03); } catch (e) {}
+  }
 
   // Carte du jour : la même toute la journée
   function todayIndex() {
@@ -847,10 +941,6 @@ body {
 
   show((location.hash || "").replace("#", "") || "accueil");
 })();
-document.getElementById("b-start").addEventListener("click", function () {
-  var o = document.querySelector("#v-poser .orb-box");
-  if (o && o.scrollIntoView) { try { o.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { o.scrollIntoView(); } }
-});
 if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 </script>
 </body>

@@ -429,7 +429,7 @@ body {
 .avr-opts { display: flex; flex-direction: column; gap: 14px; }
 .avr-opts div { border-left: 2px solid rgba(212,175,55,.45); padding: 2px 0 2px 14px; }
 .avr-opts b { display: block; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 20px; color: #E6C877; margin-bottom: 2px; }
-.avr-opts span { font-size: 15px; line-height: 1.45; color: #F5E9DA; }
+.avr-opts div span { font-size: 15px; line-height: 1.45; color: #F5E9DA; }
 #sheet-avr .ici-body { gap: 14px; }
 #sheet-avr .sheet-actions { flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
@@ -793,6 +793,7 @@ body {
 
   // Fenêtre d'une respiration
   var lastFocus = null;
+  var keepHist = false;
   function openSheet(p, autostart) {
     pat = p;
     stopBreath(true);
@@ -802,7 +803,8 @@ body {
     $("sheet").hidden = false;
     $("sheet").scrollTop = 0;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    if (!keepHist) { try { history.pushState({ sheet: 1 }, ""); } catch (e) {} }
+    keepHist = false;
     $("b-close").focus();
     if (autostart) startBreath();
   }
@@ -1189,14 +1191,22 @@ body {
     { w: "Ici, maintenant", t: "Sens un appui, là où ton corps touche la chaise, le sol ou le lit. Tu peux laisser tes mains se poser. Prends une respiration un peu plus lente.", btn: "Continuer" },
     { w: "Et maintenant", t: "Trois possibilités, tu prends celle qui te va.", btn: "Fermer", stay: true,
       opts: [["Répondre maintenant", "Si c’est plus tranquille en toi, tu peux répondre. Une phrase courte suffit."], ["Attendre un peu", "Tu peux laisser le message là et revenir dans une heure, ou demain. Par exemple : « Je te réponds un peu plus tard. »"], ["Demander une précision", "Si un mot reste flou, tu peux demander. Par exemple : « Qu’est-ce que tu voulais dire par… ? »"]] },
-    { w: "", t: "Tu peux prendre encore un moment avant de retourner au message.", btn: "Fermer", again: true }
+    { w: "", t: "Tu peux prendre encore un moment avant de retourner au message.", btn: "Fermer", again: true,
+      breaths: [["Retrouver mon calme", "Souffle long : 4 secondes pour inspirer, 6 pour expirer.", 1], ["Retrouver ma lucidité", "Souffle carré : 4 secondes pour chaque temps, pour retrouver de la stabilité.", 2]] }
   ];
   var avrStep = 0, avrFocus = null;
   function paintAvr() {
     var st = AVR[avrStep];
     $("avr-title").textContent = st.w; $("avr-title").hidden = !st.w;
     $("avr-text").textContent = st.t;
-    var o = $("avr-opts"); o.innerHTML = ""; o.hidden = !st.opts;
+    var o = $("avr-opts"); o.innerHTML = ""; o.hidden = !st.opts && !st.breaths;
+    if (st.breaths) st.breaths.forEach(function (x) {
+      var b = document.createElement("button"), n = document.createElement("span"), d = document.createElement("span");
+      b.type = "button"; b.className = "ici-card"; n.className = "ici-name"; d.className = "ici-desc";
+      n.textContent = x[0]; d.textContent = x[1]; b.appendChild(n); b.appendChild(d);
+      b.addEventListener("click", function () { closeAvr(); keepHist = true; openSheet(PATTERNS[x[2]], false); });
+      o.appendChild(b);
+    });
     if (st.opts) st.opts.forEach(function (x) { var d = document.createElement("div"), b = document.createElement("b"), sp = document.createElement("span"); b.textContent = x[0]; sp.textContent = x[1]; d.appendChild(b); d.appendChild(sp); o.appendChild(d); });
     $("avr-note").textContent = st.note || ""; $("avr-note").hidden = !st.note;
     $("b-avr-next").textContent = st.btn;

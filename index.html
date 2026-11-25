@@ -416,6 +416,16 @@ body {
 .tap-fig .hand.on { fill: #E6C877; fill-opacity: 1; filter: drop-shadow(0 0 6px rgba(230,170,70,.9)); }
 .tap-phrase { text-wrap: balance; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 24px; line-height: 1.25; color: #E6C877; text-align: center; margin: 0; }
 .tap-phrases { margin-top: 6px; }
+.tap-fig .pt { fill: #D4AF37; fill-opacity: .28; stroke: #D4AF37; stroke-width: 1.2; }
+.tap-fig .pt.on { fill: #E6C877; fill-opacity: 1; filter: drop-shadow(0 0 7px rgba(230,170,70,.95)); transform-box: fill-box; transform-origin: center; animation: ptPulse .8s ease-in-out infinite; }
+.tap-fig .edge { stroke: #D4AF37; stroke-opacity: .28; stroke-width: 7; stroke-linecap: round; fill: none; }
+.tap-fig .edge.on { stroke: #E6C877; stroke-opacity: 1; filter: drop-shadow(0 0 7px rgba(230,170,70,.95)); animation: edgePulse .8s ease-in-out infinite; }
+@keyframes ptPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.55); } }
+@keyframes edgePulse { 0%, 100% { stroke-opacity: .55; } 50% { stroke-opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tap-fig .pt.on, .tap-fig .edge.on { animation: none; } }
+#sheet-eft .ici-body { gap: 12px; }
+#sheet-eft .tap-fig svg { width: min(46vw, 180px); }
+#sheet-eft .sheet-actions { flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
 .ici-body > * { animation: iciIn .5s ease both; }
 @media (prefers-reduced-motion: reduce) { .ici-body > * { animation: none; } }
@@ -496,6 +506,10 @@ body {
       <span class="ici-name">Tapoter</span>
       <span class="ici-desc">Un tapotage doux, un côté puis l'autre, au rythme de deux cercles.</span>
     </button>
+    <button class="ici-card" id="b-eft" type="button">
+      <span class="ici-name">Tapoter le visage</span>
+      <span class="ici-desc">Huit points, un à un, avec une phrase à répéter.</span>
+    </button>
   </section>
 
   <div class="sheet" id="sheet-ret" role="dialog" aria-modal="true" aria-labelledby="ret-title" hidden>
@@ -519,6 +533,25 @@ body {
       </div>
       <div class="row sheet-actions">
         <button class="btn" id="b-ret-next" type="button">Continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-eft" role="dialog" aria-modal="true" aria-labelledby="eft-title" hidden>
+    <div class="sheet-in">
+      <button class="back" id="b-eft-close" type="button">← Fermer</button>
+      <div class="ici-body">
+        <h3 id="eft-title"></h3>
+        <p id="eft-text" aria-live="polite"></p>
+        <div class="tap-phrases chips" id="eft-chips" role="group" aria-label="Ce que tu ressens" hidden></div>
+        <div class="tap-fig" id="eft-fig" hidden></div>
+        <p class="tap-phrase" id="eft-phrase" hidden></p>
+        <p class="small" id="eft-note" hidden></p>
+      </div>
+      <div class="row sheet-actions">
+        <button class="btn" id="b-eft-next" type="button">Commencer</button>
+        <button class="btn ghost" id="b-eft-again" type="button" hidden>Refaire un tour</button>
+        <button class="btn ghost" id="b-eft-sound" type="button" aria-pressed="true">Son : oui</button>
       </div>
     </div>
   </div>
@@ -760,8 +793,8 @@ body {
     if (history.state && history.state.sheet) history.back(); else closeAllSheets();
   }
   $("b-close").addEventListener("click", requestClose);
-  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden; }
-  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); }
+  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden; }
+  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); }
   window.addEventListener("popstate", closeAllSheets);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && anySheet()) requestClose(); });
 
@@ -989,6 +1022,134 @@ body {
   $("b-ret-next").addEventListener("click", function () {
     if (retStep >= RET.length - 1) { requestClose(); return; }
     retStep++; paintRet();
+  });
+
+  // Tapoter le visage : les points de l'EFT, un à un
+  var EFT_FEEL = ["Cette tension", "Ce stress", "Cette inquiétude", "Cette fatigue", "Cette émotion"];
+  var EFT_PTS = [
+    { w: "Sommet de la tête", t: "Au sommet de la tête, au milieu.", x: 100, y: 20 },
+    { w: "Début du sourcil", t: "Au début du sourcil, tout près de la racine du nez.", x: 91, y: 46 },
+    { w: "Coin de l'œil", t: "Sur l'os, au coin extérieur de l'œil.", x: 70, y: 58 },
+    { w: "Sous l'œil", t: "Sur l'os, juste sous l'œil.", x: 86, y: 71 },
+    { w: "Sous le nez", t: "Entre le nez et la lèvre.", x: 100, y: 83 },
+    { w: "Creux du menton", t: "Dans le creux, entre la lèvre et le menton.", x: 100, y: 99 },
+    { w: "Clavicule", t: "Juste sous la clavicule, près du creux du cou.", x: 80, y: 130 },
+    { w: "Sous le bras", t: "Sur le côté, à une dizaine de centimètres sous l'aisselle.", x: 52, y: 166 }
+  ];
+  var eftStep = -1, eftFeel = 0, eftTimer = null, eftFocus = null;
+  function eftSvg(idx) {
+    var inner;
+    if (idx === 0) {
+      inner = '<rect x="72" y="104" width="58" height="64" rx="16" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<rect x="72" y="52" width="13" height="64" rx="6.5" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<rect x="87" y="38" width="13" height="78" rx="6.5" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<rect x="102" y="44" width="13" height="72" rx="6.5" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<rect x="117" y="58" width="13" height="58" rx="6.5" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<rect x="128" y="106" width="40" height="13" rx="6.5" transform="rotate(32 128 112)" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<path class="edge on" d="M70 112 L70 160"/>';
+    } else {
+      var dots = EFT_PTS.map(function (p, i) { return '<circle class="pt' + (i === idx - 1 ? " on" : "") + '" cx="' + p.x + '" cy="' + p.y + '" r="5.5"/>'; }).join("");
+      inner = '<ellipse cx="100" cy="62" rx="34" ry="42" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+        '<path d="M89 102 L89 120 M111 102 L111 120" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+        '<path d="M50 132 Q100 114 150 132 L158 212 L42 212 Z" fill="none" stroke="#D4AF37" stroke-width="1.8" stroke-linejoin="round"/>' +
+        '<path d="M80 49 Q86 45 94 47 M106 47 Q114 45 120 49" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>' +
+        '<ellipse cx="85" cy="58" rx="6" ry="3" fill="none" stroke="#D4AF37" stroke-width="1.4" opacity=".7"/><ellipse cx="115" cy="58" rx="6" ry="3" fill="none" stroke="#D4AF37" stroke-width="1.4" opacity=".7"/>' +
+        '<path d="M100 64 L96 78 Q100 81 104 78" fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>' +
+        '<path d="M90 92 Q100 97 110 92" fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>' + dots;
+    }
+    var alt = idx === 0 ? "Schéma : la tranche de la main, côté petit doigt." : "Schéma du visage et du haut du corps, avec le point à tapoter allumé : " + EFT_PTS[idx - 1].w + ".";
+    return '<svg viewBox="0 0 200 220" role="img" aria-label="' + alt + '">' + inner + '</svg>';
+  }
+  function eftTock() {
+    if (!soundOn) return;
+    var ctx = getCtx(); if (!ctx) return;
+    try {
+      var t0 = ctx.currentTime + .02, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 330;
+      g.gain.setValueAtTime(.0001, t0); g.gain.linearRampToValueAtTime(.16, t0 + .006); g.gain.exponentialRampToValueAtTime(.0001, t0 + .22);
+      o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + .25);
+    } catch (e) {}
+  }
+  function eftRhythm(on) {
+    clearInterval(eftTimer); eftTimer = null;
+    if (on) { eftTock(); eftTimer = setInterval(eftTock, 800); }
+  }
+  function paintEftSound() { var b = $("b-eft-sound"); b.textContent = soundOn ? "Son : oui" : "Son : non"; b.setAttribute("aria-pressed", soundOn ? "true" : "false"); }
+  function paintEft() {
+    var intro = eftStep < 0, fin = eftStep > EFT_PTS.length;
+    var feel = EFT_FEEL[eftFeel], low = feel.charAt(0).toLowerCase() + feel.slice(1);
+    $("eft-title").hidden = fin;
+    $("eft-chips").hidden = !intro;
+    $("eft-fig").hidden = intro || fin;
+    $("eft-phrase").hidden = intro;
+    $("eft-note").hidden = !(intro || fin);
+    $("b-eft-sound").hidden = fin;
+    $("b-eft-again").hidden = !fin;
+    if (intro) {
+      $("eft-title").textContent = "Tapoter le visage";
+      $("eft-text").textContent = "Huit petits points, un à un, avec deux doigts. À chaque point, répète une phrase dans ta tête ou à voix basse. Choisis ce que tu veux apaiser :";
+      var box = $("eft-chips"); box.innerHTML = "";
+      EFT_FEEL.forEach(function (f, i) {
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "chip"; b.textContent = f;
+        b.setAttribute("aria-pressed", i === eftFeel ? "true" : "false");
+        b.addEventListener("click", function () { eftFeel = i; Array.prototype.forEach.call(box.children, function (o, k) { o.setAttribute("aria-pressed", k === i ? "true" : "false"); }); });
+        box.appendChild(b);
+      });
+      $("eft-phrase").hidden = true;
+      $("eft-note").textContent = "Un geste pour se poser. Tu peux t'arrêter à tout moment. Si c'est trop fort, reviens à ta respiration, ou parle à quelqu'un près de toi. Si tu veux, note ce que tu ressens de 0 à 10 avant et après.";
+      $("b-eft-next").textContent = "Commencer";
+    } else if (eftStep === 0) {
+      $("eft-title").textContent = "Pour commencer";
+      $("eft-text").textContent = "Tapote doucement la tranche d'une main, côté petit doigt, avec deux doigts de l'autre main. Répète trois fois :";
+      $("eft-fig").innerHTML = eftSvg(0);
+      $("eft-phrase").textContent = "«\u00a0Même si j'ai " + low + ", je m'accepte profondément et complètement.\u00a0»";
+      $("b-eft-next").textContent = "Continuer";
+    } else if (!fin) {
+      var pt = EFT_PTS[eftStep - 1];
+      $("eft-title").textContent = pt.w;
+      $("eft-text").textContent = pt.t + " Tapote doucement, sept fois environ, d'un côté ou de l'autre.";
+      $("eft-fig").innerHTML = eftSvg(eftStep);
+      $("eft-phrase").textContent = "«\u00a0" + feel + ".\u00a0»";
+      $("b-eft-next").textContent = eftStep === EFT_PTS.length ? "Terminer" : "Continuer";
+    } else {
+      $("eft-text").textContent = "Respire profondément. Tu peux dire :";
+      $("eft-phrase").hidden = false;
+      $("eft-phrase").textContent = "«\u00a0Je choisis de me détendre.\u00a0»";
+      $("eft-note").textContent = "Si tu avais noté ce que tu ressens de 0 à 10, regarde où tu en es maintenant. Tu peux refaire un tour si tu en as envie.";
+      $("b-eft-next").textContent = "Fermer";
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("#sheet-eft .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+    $("sheet-eft").scrollTop = 0;
+  }
+  function openEft() {
+    eftStep = -1; eftRhythm(false); paintEftSound(); paintEft();
+    eftFocus = document.activeElement;
+    $("sheet-eft").hidden = false;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    $("b-eft-close").focus();
+  }
+  function closeEft() {
+    eftRhythm(false);
+    $("sheet-eft").hidden = true;
+    document.body.style.overflow = "";
+    if (eftFocus && eftFocus.focus) { try { eftFocus.focus(); } catch (e) {} }
+  }
+  $("b-eft").addEventListener("click", openEft);
+  $("b-eft-close").addEventListener("click", requestClose);
+  $("b-eft-next").addEventListener("click", function () {
+    if (eftStep > EFT_PTS.length) { requestClose(); return; }
+    eftStep++;
+    if (eftStep === 0) eftRhythm(true);
+    if (eftStep > EFT_PTS.length) eftRhythm(false);
+    paintEft();
+  });
+  $("b-eft-again").addEventListener("click", function () { eftStep = 0; eftRhythm(true); paintEft(); });
+  $("b-eft-sound").addEventListener("click", function () {
+    soundOn = !soundOn;
+    try { localStorage.setItem("oree-son", soundOn ? "on" : "off"); } catch (e) {}
+    paintEftSound(); paintSound();
   });
 
   // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)

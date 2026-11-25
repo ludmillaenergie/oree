@@ -31,6 +31,8 @@ ol { margin: 0; padding-left: 22px; color: var(--ink); }
 ol li { margin: 6px 0; padding-left: 4px; }
 .note { font-size: 15px; }
 .btn { align-self: center; display: inline-block; padding: 14px 28px; border-radius: 999px; background: var(--gold); color: #211D1A; font-weight: 600; text-decoration: none; }
+.btn.btn-top { display: none; }
+@media (pointer: coarse), (max-width: 700px) { .qr, .cap { display: none; } .btn.btn-top { display: inline-block; } }
 </style>
 </head>
 <body>
@@ -38,13 +40,15 @@ ol li { margin: 6px 0; padding-left: 4px; }
   <h1>Installer Orée</h1>
   <p>Orée s'ouvre depuis un lien, sans compte. Tu peux la garder sur l'écran d'accueil de ton téléphone, comme une appli.</p>
 
+  <a class="btn btn-top" href="./">Ouvrir Orée</a>
+
   <div class="qr"><img src="icons/qr-oree.png" alt="QR code qui ouvre Orée" width="400" height="400"></div>
-  <p class="cap">Scanne ce code avec l'appareil photo de ton téléphone.</p>
+  <p class="cap">Depuis un ordinateur, scanne ce code avec l'appareil photo de ton téléphone.</p>
 
   <section class="card">
     <h2>Sur iPhone</h2>
     <ol>
-      <li>Ouvre le lien dans Safari.</li>
+      <li>Ouvre Orée dans Safari, avec le bouton « Ouvrir Orée ».</li>
       <li>Touche le bouton Partager, le carré avec une flèche vers le haut.</li>
       <li>Choisis « Sur l'écran d'accueil ».</li>
       <li>Touche « Ajouter ».</li>
@@ -54,14 +58,14 @@ ol li { margin: 6px 0; padding-left: 4px; }
   <section class="card">
     <h2>Sur Android</h2>
     <ol>
-      <li>Ouvre le lien dans Chrome.</li>
+      <li>Ouvre Orée dans Chrome, avec le bouton « Ouvrir Orée ».</li>
       <li>Touche le menu, les trois points en haut à droite.</li>
       <li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li>
       <li>Confirme.</li>
     </ol>
   </section>
 
-  <p class="note">Selon ton téléphone, les mots peuvent changer un peu. Orée marche aussi sans l'installer, directement dans le navigateur. Tes notes restent sur ton téléphone.</p>
+  <p class="note">Fais ces gestes depuis Orée, pas depuis cette page. Selon ton téléphone, les mots peuvent changer un peu. Orée marche aussi sans l'installer, directement dans le navigateur. Tes notes restent sur ton téléphone.</p>
 
   <a class="btn" href="./">Ouvrir Orée</a>
 </main>

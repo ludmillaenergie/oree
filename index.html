@@ -411,6 +411,23 @@ body {
 .ici-body > * { animation: iciIn .5s ease both; }
 @media (prefers-reduced-motion: reduce) { .ici-body > * { animation: none; } }
 @keyframes iciIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* Orée : Revenir ici (remarquer, regarder, reprendre) */
+.ret-glow { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .9s ease; z-index: 0;
+  background: radial-gradient(circle at 50% 72%, var(--c, transparent) 0%, rgba(0,0,0,0) 62%); }
+.ret-glow.on { opacity: .5; }
+#sheet-ret .sheet-in { position: relative; z-index: 1; }
+#sheet-ret .sheet-actions { background: none; }
+#ret-title { font-size: 46px; }
+#ret-text { font-size: 20px; line-height: 1.5; color: var(--ink); }
+.ret-ex { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 26px; line-height: 1.25; color: #E6C877; }
+.ret-sw { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.ret-sw button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(245,233,218,.35); }
+.ret-sw button[aria-pressed="true"] { border-color: #F5E9DA; }
+.ret-sw button:focus-visible { outline: 2px solid #F5E9DA; outline-offset: 3px; }
+.ret-dots { display: flex; gap: 10px; margin-top: 8px; }
+.ret-dots span { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(212,175,55,.6); }
+.ret-dots span.on { background: #D4AF37; border-color: #D4AF37; }
+@media (prefers-reduced-motion: reduce) { .ret-glow { transition: none; } }
 </style>
 </head>
 <body>
@@ -458,17 +475,41 @@ body {
       <span class="u-sub">Respirer tout de suite</span>
     </button>
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
-    <button class="ici-card" id="b-ici" type="button">
+    <button class="ici-card" id="b-ret" type="button">
       <span class="ici-name">Revenir ici</span>
-      <span class="ici-desc">Un tapotage doux, un côté puis l'autre, sans chrono.</span>
+      <span class="ici-desc">Quand la tête part dans la suite : le remarquer, puis regarder autour de soi.</span>
+    </button>
+    <button class="ici-card" id="b-ici" type="button">
+      <span class="ici-name">Tapoter</span>
+      <span class="ici-desc">Un tapotage doux, un côté puis l'autre, au rythme de deux cercles.</span>
     </button>
   </section>
+
+  <div class="sheet" id="sheet-ret" role="dialog" aria-modal="true" aria-labelledby="ret-title" hidden>
+    <div class="ret-glow" id="ret-glow"></div>
+    <div class="sheet-in">
+      <button class="back" id="b-ret-close" type="button">← Fermer</button>
+      <div class="ici-body">
+        <h3 id="ret-title"></h3>
+        <p id="ret-text" aria-live="polite"></p>
+        <p class="ret-ex" id="ret-ex" hidden></p>
+        <div class="ret-hue" id="ret-hue" hidden>
+          <p class="small">Si tu veux, touche la teinte la plus proche de ce que tu vois.</p>
+          <div class="ret-sw" id="ret-sw" role="group" aria-label="Teintes"></div>
+        </div>
+        <div class="ret-dots" id="ret-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+      </div>
+      <div class="row sheet-actions">
+        <button class="btn" id="b-ret-next" type="button">Continuer</button>
+      </div>
+    </div>
+  </div>
 
   <div class="sheet" id="sheet-ici" role="dialog" aria-modal="true" aria-labelledby="ici-title" hidden>
     <div class="sheet-in">
       <button class="back" id="b-ici-close" type="button">← Fermer</button>
       <div class="ici-body">
-        <h3 id="ici-title">Revenir ici</h3>
+        <h3 id="ici-title">Tapoter</h3>
         <p id="ici-text" aria-live="polite"></p>
         <div class="tap-box" id="tap-box" aria-hidden="true"><span class="tap-dot" id="tap-l"></span><span class="tap-dot" id="tap-r"></span></div>
       </div>
@@ -585,7 +626,7 @@ body {
   function show(name) {
     if (views.indexOf(name) < 0) name = "accueil";
     views.forEach(function (v) { $("v-" + v).hidden = (v !== name); });
-    if (name !== "poser") { stopBreath(true); if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); }
+    if (name !== "poser") { stopBreath(true); closeAllSheets(); }
     if (name !== "ecouter") stopAll();
     $("foot").textContent = "";
     window.scrollTo(0, 0);
@@ -695,11 +736,13 @@ body {
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
   }
   function requestClose() {
-    if (history.state && history.state.sheet) history.back(); else { closeSheet(); closeIci(); }
+    if (history.state && history.state.sheet) history.back(); else closeAllSheets();
   }
   $("b-close").addEventListener("click", requestClose);
-  window.addEventListener("popstate", function () { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && (!$("sheet").hidden || !$("sheet-ici").hidden)) requestClose(); });
+  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden; }
+  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); }
+  window.addEventListener("popstate", closeAllSheets);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && anySheet()) requestClose(); });
 
   // Revenir ici : un tapotage doux, un côté puis l'autre, au rythme de deux cercles
   var TAP = [
@@ -738,7 +781,7 @@ body {
     $("tap-box").hidden = fin;
     $("b-tap-sound").hidden = fin;
     if (intro) {
-      $("ici-title").textContent = "Revenir ici";
+      $("ici-title").textContent = "Tapoter";
       $("ici-text").textContent = "Un tapotage doux, un côté puis l'autre. Tu peux le faire assis ou debout, les yeux ouverts ou fermés. Les cercles donnent le rythme.";
       $("b-ici-next").textContent = "Commencer";
     } else if (fin) {
@@ -778,6 +821,62 @@ body {
     soundOn = !soundOn;
     try { localStorage.setItem("oree-son", soundOn ? "on" : "off"); } catch (e) {}
     paintTapSound(); paintSound();
+  });
+
+  // Revenir ici : remarquer, regarder autour de soi, reprendre la main
+  var RET = [
+    { w: "Remarquer", t: "Quand ta tête part dans la suite, tu peux juste le remarquer.", ex: "« Je suis en train d'imaginer la suite. »" },
+    { w: "Regarder", t: "Regarde près de toi. Choisis un objet et remarque un détail que tu n'avais jamais vraiment regardé.", hue: true },
+    { w: "", t: "Reprends ce que tu faisais, ou reste ici encore un instant." }
+  ];
+  var HUES = [["Ambre", "#D9953A"], ["Rouge", "#C4513F"], ["Vert", "#6E8B5B"], ["Bleu", "#5B7FA6"], ["Violet", "#8A6AA6"], ["Blanc", "#E8DCC8"]];
+  var retStep = 0, retFocus = null, retHue = null;
+  function paintRet() {
+    var st = RET[retStep], last = retStep === RET.length - 1;
+    $("ret-title").textContent = st.w; $("ret-title").hidden = !st.w;
+    $("ret-text").textContent = st.t;
+    $("ret-ex").textContent = st.ex || ""; $("ret-ex").hidden = !st.ex;
+    $("ret-hue").hidden = !st.hue;
+    $("b-ret-next").textContent = last ? "Fermer" : "Continuer";
+    Array.prototype.forEach.call($("ret-dots").children, function (d, i) { d.className = i <= retStep ? "on" : ""; });
+    $("ret-dots").hidden = last;
+    if (!st.hue || last) setHue(null);
+    Array.prototype.forEach.call(document.querySelectorAll("#sheet-ret .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+  }
+  function setHue(h) {
+    retHue = h;
+    var g = $("ret-glow");
+    if (h) { g.style.setProperty("--c", h); g.className = "ret-glow on"; } else { g.className = "ret-glow"; }
+    Array.prototype.forEach.call($("ret-sw").children, function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-c") === h ? "true" : "false"); });
+  }
+  (function buildHues() {
+    HUES.forEach(function (x) {
+      var b = document.createElement("button");
+      b.type = "button"; b.style.background = x[1]; b.setAttribute("data-c", x[1]);
+      b.setAttribute("aria-label", x[0]); b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () { setHue(retHue === x[1] ? null : x[1]); });
+      $("ret-sw").appendChild(b);
+    });
+  })();
+  function openRet() {
+    retStep = 0; setHue(null); paintRet();
+    retFocus = document.activeElement;
+    $("sheet-ret").hidden = false; $("sheet-ret").scrollTop = 0;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    $("b-ret-close").focus();
+  }
+  function closeRet() {
+    setHue(null);
+    $("sheet-ret").hidden = true;
+    if ($("sheet").hidden && $("sheet-ici").hidden) document.body.style.overflow = "";
+    if (retFocus && retFocus.focus) { try { retFocus.focus(); } catch (e) {} }
+  }
+  $("b-ret").addEventListener("click", openRet);
+  $("b-ret-close").addEventListener("click", requestClose);
+  $("b-ret-next").addEventListener("click", function () {
+    if (retStep >= RET.length - 1) { requestClose(); return; }
+    retStep++; paintRet();
   });
 
   // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)

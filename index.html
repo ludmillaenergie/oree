@@ -683,7 +683,7 @@ body {
   }
   function noiseBuffer(ctx) {
     if (noiseBuf && noiseBuf.sampleRate === ctx.sampleRate) return noiseBuf;
-    var len = ctx.sampleRate * 3, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    var len = Math.floor(ctx.sampleRate * 10), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
     var b0 = 0, b1 = 0, b2 = 0;
     for (var i = 0; i < len; i++) {
       var w = Math.random() * 2 - 1;
@@ -693,8 +693,8 @@ body {
     noiseBuf = buf; return buf;
   }
   function breathSound(ctx, kind, ms, t0) {
-    var dur = ms / 1000, src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
-    src.buffer = noiseBuffer(ctx); src.loop = true;
+    var dur = ms / 1000, src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain(), m = ctx.createGain();
+    src.buffer = noiseBuffer(ctx);
     bp.type = "bandpass"; bp.Q.value = .9;
     g.gain.setValueAtTime(.0001, t0);
     if (kind === "in") {
@@ -704,17 +704,16 @@ body {
       bp.frequency.setValueAtTime(1300, t0); bp.frequency.exponentialRampToValueAtTime(300, t0 + dur);
       g.gain.exponentialRampToValueAtTime(.6, t0 + Math.min(.5, dur * .15)); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
     }
-    src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+    src.connect(bp); bp.connect(g); g.connect(m); m.connect(ctx.destination);
     src.start(t0, Math.random() * 1.5); src.stop(t0 + dur + .05);
-    return { src: src, g: g };
+    return { src: src, m: m };
   }
   function stopSound() {
     if (!curSnd || !audioCtx) { curSnd = null; return; }
     try {
       var t = audioCtx.currentTime;
-      curSnd.g.gain.cancelScheduledValues(t);
-      curSnd.g.gain.setTargetAtTime(.0001, t, .06);
-      curSnd.src.stop(t + .4);
+      curSnd.m.gain.setTargetAtTime(0, t, .05);
+      curSnd.src.stop(t + .5);
     } catch (e) {}
     curSnd = null;
   }
@@ -724,7 +723,6 @@ body {
     return null;
   }
   function playPhaseSound(label, ms) {
-    stopSound();
     if (!soundOn) return;
     var k = soundKind(label), ctx = getCtx();
     if (!k || !ctx) return;

@@ -772,7 +772,7 @@ body {
     { w: "Cuisses", pose: "cuisses", alt: "Posture : les mains posées sur les cuisses.", t: "Pose les mains à plat sur tes cuisses. Tapote un côté, puis l'autre." }
   ];
   var PHRASES = ["Je suis là.", "Je prends un moment pour moi.", "Je reviens doucement."];
-  var tapPhrase = PHRASES[0];
+  var tapPhraseIdx = 0;
   function limb(x1, y1, x2, y2) {
     return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#D4AF37" stroke-width="13" stroke-linecap="round"/>' +
            '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#211D1A" stroke-width="9.8" stroke-linecap="round"/>';
@@ -826,9 +826,9 @@ body {
     PHRASES.forEach(function (ph) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "chip"; b.textContent = ph;
-      b.setAttribute("aria-pressed", ph === tapPhrase ? "true" : "false");
+      b.setAttribute("aria-pressed", PHRASES.indexOf(ph) === tapPhraseIdx ? "true" : "false");
       b.addEventListener("click", function () {
-        tapPhrase = ph;
+        tapPhraseIdx = PHRASES.indexOf(ph);
         Array.prototype.forEach.call(box.children, function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
       });
       box.appendChild(b);
@@ -844,7 +844,7 @@ body {
     $("tap-phrase").hidden = intro || fin;
     if (intro) {
       $("ici-title").textContent = "Tapoter";
-      $("ici-text").textContent = "Un tapotage doux, un côté puis l'autre, au rythme des cercles. Choisis une phrase à répéter, dans ta tête ou à voix basse, à chaque tapotement.";
+      $("ici-text").textContent = "Un tapotage doux, un côté puis l'autre, au rythme des cercles. Répète une phrase dans ta tête ou à voix basse. Choisis la première : elle changera à chaque posture.";
       $("b-ici-next").textContent = "Commencer";
       renderPhrases();
     } else if (fin) {
@@ -854,7 +854,7 @@ body {
       $("ici-title").textContent = TAP[tapStep].w;
       $("ici-text").textContent = TAP[tapStep].t;
       $("tap-fig").innerHTML = figureSvg(TAP[tapStep].pose, TAP[tapStep].alt);
-      $("tap-phrase").textContent = "«\u00a0" + tapPhrase + "\u00a0»";
+      $("tap-phrase").textContent = "«\u00a0" + PHRASES[(tapPhraseIdx + tapStep) % PHRASES.length] + "\u00a0»";
       $("b-ici-next").textContent = "Continuer";
       paintHands(tapSide);
     }

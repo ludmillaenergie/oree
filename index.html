@@ -1060,6 +1060,21 @@ body {
     var alt = idx === 0 ? "Schéma : la tranche de la main, côté petit doigt." : "Schéma du visage et du haut du corps, avec le point à tapoter allumé : " + EFT_PTS[idx - 1].w + ".";
     return '<svg viewBox="0 0 200 220" role="img" aria-label="' + alt + '">' + inner + '</svg>';
   }
+  function eftPhrase(i) {
+    var f = EFT_FEEL[eftFeel], low = f.charAt(0).toLowerCase() + f.slice(1);
+    var tout = (f.indexOf("Cette") === 0 ? "Toute " : "Tout ") + low;
+    var L = [
+      f + ".",
+      tout + ".",
+      f + " dans mon corps.",
+      f + " que je ressens.",
+      "Je reconnais " + low + ".",
+      "Je laisse un peu de place à " + low + ".",
+      "Je peux relâcher un peu de " + low.replace(/^cette /, "cette ").replace(/^ce /, "ce ") + ".",
+      "Je me détends doucement."
+    ];
+    return L[i];
+  }
   function eftTock() {
     if (!soundOn) return;
     var ctx = getCtx(); if (!ctx) return;
@@ -1110,7 +1125,7 @@ body {
       $("eft-title").textContent = pt.w;
       $("eft-text").textContent = pt.t + " Tapote doucement, sept fois environ, d'un côté ou de l'autre.";
       $("eft-fig").innerHTML = eftSvg(eftStep);
-      $("eft-phrase").textContent = "«\u00a0" + feel + ".\u00a0»";
+      $("eft-phrase").textContent = "«\u00a0" + eftPhrase(eftStep - 1) + "\u00a0»";
       $("b-eft-next").textContent = eftStep === EFT_PTS.length ? "Terminer" : "Continuer";
     } else {
       $("eft-text").textContent = "Respire profondément. Tu peux dire :";

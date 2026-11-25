@@ -613,9 +613,13 @@ body {
         <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 28c5-9 9-9 14 0s9 9 14 0 4-6 4-6"/><path d="M6 36h32" opacity=".5"/></svg>
         <span class="desc">Un carnet pour tes rêves, tes synchronicités et tes ressentis.</span>
       </button>
+      <button class="door" data-go="applis">
+        <span class="name">Mes autres applis</span>
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="7" y="7" width="12" height="12" rx="3.5"/><rect x="25" y="7" width="12" height="12" rx="3.5"/><rect x="7" y="25" width="12" height="12" rx="3.5"/><rect x="25" y="25" width="12" height="12" rx="3.5" fill="currentColor" stroke="none"/></svg>
+        <span class="desc">Mes accompagnements et mes oracles.</span>
+      </button>
     </div>
     <p class="small">Gratuit. Aucun compte à créer.</p>
-    <button class="more" data-go="applis"><span class="u">Mes autres applis</span> <span aria-hidden="true">→</span></button>
   </section>
 
   <!-- Poser -->
@@ -1575,7 +1579,7 @@ body {
   // PUBLIC = false : toutes les cartes sont visibles, pour pouvoir les compléter (prototype).
   // PUBLIC = true : une carte n'apparaît que si phrase, price et url sont remplis.
   var PUBLIC = false;
-  var SHOW_APPS = false; // mettre true le jour où la page « Mes autres applis » doit apparaître
+  var SHOW_APPS = true; // mettre false pour cacher la carte et la page « Mes autres applis »
   var APPS = [
     { name: "Le Passage",
       phrase: "Un accompagnement à ton rythme, pour mettre des mots sur ce que tu traverses et prendre le temps d’y voir plus clair.",
@@ -1600,11 +1604,11 @@ body {
   ];
   (function buildApps() {
     var ul = $("apps");
-    if (!SHOW_APPS) { var lk0 = document.querySelector('[data-go="applis"].more'); if (lk0) lk0.hidden = true; }
+    if (!SHOW_APPS) { var lk0 = document.querySelector('.door[data-go="applis"]'); if (lk0) lk0.hidden = true; }
     var shown = APPS.filter(function (a) { return !PUBLIC || (a.phrase && a.price && a.url); });
     if (PUBLIC && !shown.length) {
-      var lk = document.querySelector('[data-go="applis"]');
-      if (lk && lk.className === "more") lk.hidden = true;
+      var lk = document.querySelector('.door[data-go="applis"]');
+      if (lk) lk.hidden = true;
     }
     shown.forEach(function (a) {
       var li = document.createElement("li"); li.className = "app";

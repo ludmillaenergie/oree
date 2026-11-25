@@ -390,6 +390,27 @@ body {
 .urgence .u-main { font-weight: 600; font-size: 18px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.2; }
 .urgence .u-sub { font-weight: 500; font-size: 13px; opacity: .92; line-height: 1.2; }
 #v-poser .urgence { margin: 2px 0; }
+/* Orée : Revenir ici */
+.ici-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;
+  margin-top: 6px; padding: 16px 18px; text-align: left; cursor: pointer;
+  background: #30241F; border: 1px solid #D4AF37; border-radius: 18px; color: #F5E9DA;
+}
+.ici-card:hover { background: #3a2c25; }
+.ici-card:focus-visible { outline: 2px solid #D4AF37; outline-offset: 3px; }
+.ici-name { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 30px; line-height: 1.1; color: #F5E9DA; }
+.ici-desc { font-family: var(--body); font-weight: 500; font-size: 15px; color: #D9CBB8; }
+.ici-body { margin: auto 0; display: flex; flex-direction: column; gap: 18px; }
+.ici-kicker { color: var(--muted); font-size: 15px; letter-spacing: .04em; }
+#ici-title { font-size: 52px; }
+#ici-text { font-size: 20px; line-height: 1.5; color: var(--ink); }
+.ici-dots[hidden], .ici-kicker[hidden] { display: none; }
+.ici-dots { display: flex; gap: 10px; margin-top: 10px; }
+.ici-dots span { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(212,175,55,.6); background: transparent; }
+.ici-dots span.on { background: #D4AF37; border-color: #D4AF37; }
+.ici-body > * { animation: iciIn .5s ease both; }
+@media (prefers-reduced-motion: reduce) { .ici-body > * { animation: none; } }
+@keyframes iciIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 </style>
 </head>
 <body>
@@ -437,7 +458,26 @@ body {
       <span class="u-sub">Respirer tout de suite</span>
     </button>
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
+    <button class="ici-card" id="b-ici" type="button">
+      <span class="ici-name">Revenir ici</span>
+      <span class="ici-desc">Sans souffle : regarder, écouter, sentir un appui.</span>
+    </button>
   </section>
+
+  <div class="sheet" id="sheet-ici" role="dialog" aria-modal="true" aria-labelledby="ici-title" hidden>
+    <div class="sheet-in">
+      <button class="back" id="b-ici-close" type="button">← Fermer</button>
+      <div class="ici-body">
+        <p class="ici-kicker" id="ici-kicker">Revenir ici</p>
+        <h3 id="ici-title"></h3>
+        <p id="ici-text" aria-live="polite"></p>
+        <div class="ici-dots" id="ici-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+      </div>
+      <div class="row sheet-actions">
+        <button class="btn" id="b-ici-next" type="button">Continuer</button>
+      </div>
+    </div>
+  </div>
 
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
     <div class="sheet-in">
@@ -545,7 +585,7 @@ body {
   function show(name) {
     if (views.indexOf(name) < 0) name = "accueil";
     views.forEach(function (v) { $("v-" + v).hidden = (v !== name); });
-    if (name !== "poser") { stopBreath(true); if (!$("sheet").hidden) closeSheet(); }
+    if (name !== "poser") { stopBreath(true); if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); }
     if (name !== "ecouter") stopAll();
     $("foot").textContent = "";
     window.scrollTo(0, 0);
@@ -655,11 +695,55 @@ body {
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
   }
   function requestClose() {
-    if (history.state && history.state.sheet) history.back(); else closeSheet();
+    if (history.state && history.state.sheet) history.back(); else { closeSheet(); closeIci(); }
   }
   $("b-close").addEventListener("click", requestClose);
-  window.addEventListener("popstate", function () { if (!$("sheet").hidden) closeSheet(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("sheet").hidden) requestClose(); });
+  window.addEventListener("popstate", function () { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && (!$("sheet").hidden || !$("sheet-ici").hidden)) requestClose(); });
+
+  // Revenir ici : trois pauses, une à la fois, sans minuteur
+  var ICI = [
+    { w: "Regarder", t: "Choisis un objet près de toi. Remarque sa couleur, sa forme ou un petit détail." },
+    { w: "Écouter", t: "Prends un instant pour remarquer un son autour de toi." },
+    { w: "Sentir", t: "Remarque un point d'appui. Tes pieds sur le sol, ton dos contre le dossier ou ta main posée quelque part." }
+  ];
+  var iciStep = 0, iciFocus = null;
+  function paintIci() {
+    var fin = iciStep >= ICI.length, body = document.querySelector("#sheet-ici .ici-body");
+    $("ici-kicker").hidden = fin;
+    $("ici-title").hidden = fin;
+    $("ici-dots").hidden = fin;
+    if (fin) {
+      $("ici-text").textContent = "Tu peux rester ici encore un instant.";
+      $("b-ici-next").textContent = "Fermer";
+    } else {
+      $("ici-title").textContent = ICI[iciStep].w;
+      $("ici-text").textContent = ICI[iciStep].t;
+      $("b-ici-next").textContent = "Continuer";
+      Array.prototype.forEach.call($("ici-dots").children, function (d, i) { d.className = i <= iciStep ? "on" : ""; });
+    }
+    // relancer le fondu
+    Array.prototype.forEach.call(body.children, function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+  }
+  function openIci() {
+    iciStep = 0; paintIci();
+    iciFocus = document.activeElement;
+    $("sheet-ici").hidden = false; $("sheet-ici").scrollTop = 0;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    $("b-ici-next").focus();
+  }
+  function closeIci() {
+    $("sheet-ici").hidden = true;
+    if ($("sheet").hidden) document.body.style.overflow = "";
+    if (iciFocus && iciFocus.focus) { try { iciFocus.focus(); } catch (e) {} }
+  }
+  $("b-ici").addEventListener("click", openIci);
+  $("b-ici-close").addEventListener("click", requestClose);
+  $("b-ici-next").addEventListener("click", function () {
+    if (iciStep >= ICI.length) { requestClose(); return; }
+    iciStep++; paintIci();
+  });
 
   // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)
   var audioCtx = null, noiseBuf = null, curSnd = null, soundOn = true;

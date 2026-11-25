@@ -712,14 +712,14 @@ body {
   function humSound(ctx, ms, t0) {
     var dur = ms / 1000, osc = ctx.createOscillator(), lfo = ctx.createOscillator(), lfoG = ctx.createGain();
     var lp = ctx.createBiquadFilter(), body = ctx.createBiquadFilter(), g = ctx.createGain(), m = ctx.createGain();
-    osc.type = "sawtooth"; osc.frequency.value = 147;
-    lfo.type = "sine"; lfo.frequency.value = 5.2; lfoG.gain.value = 1.6;
+    osc.type = "sawtooth"; osc.frequency.value = 110;
+    lfo.type = "sine"; lfo.frequency.value = 5.2; lfoG.gain.value = 1.2;
     lfo.connect(lfoG); lfoG.connect(osc.frequency);
     lp.type = "lowpass"; lp.frequency.value = 950; lp.Q.value = 1.2;
-    body.type = "peaking"; body.frequency.value = 300; body.Q.value = 1.1; body.gain.value = 6;
+    body.type = "peaking"; body.frequency.value = 250; body.Q.value = 1.1; body.gain.value = 6;
     g.gain.setValueAtTime(.0001, t0);
-    g.gain.linearRampToValueAtTime(.14, t0 + .9);
-    g.gain.setValueAtTime(.14, t0 + Math.max(1, dur - 1.2));
+    g.gain.linearRampToValueAtTime(.17, t0 + .9);
+    g.gain.setValueAtTime(.17, t0 + Math.max(1, dur - 1.2));
     g.gain.linearRampToValueAtTime(.0001, t0 + dur);
     osc.connect(lp); lp.connect(body); body.connect(g); g.connect(m); m.connect(ctx.destination);
     osc.start(t0); lfo.start(t0); osc.stop(t0 + dur + .05); lfo.stop(t0 + dur + .05);

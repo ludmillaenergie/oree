@@ -404,9 +404,18 @@ body {
 .sheet [hidden] { display: none !important; }
 #ici-title { font-size: 46px; }
 #ici-text { font-size: 20px; line-height: 1.5; color: var(--ink); }
-.tap-box { display: flex; justify-content: center; gap: 56px; margin-top: 18px; }
-.tap-dot { width: 74px; height: 74px; border-radius: 50%; border: 1px solid rgba(212,175,55,.7); background: radial-gradient(circle at 38% 32%, rgba(194,138,63,.25), rgba(90,58,30,.12) 80%); transition: background .25s ease, box-shadow .25s ease, border-color .25s ease, transform .25s ease; }
+.tap-box { display: flex; justify-content: center; gap: 44px; margin-top: 8px; }
+.tap-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tap-lab { font-size: 12px; letter-spacing: .06em; color: #D9CBB8; }
+.tap-dot { width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(212,175,55,.7); background: radial-gradient(circle at 38% 32%, rgba(194,138,63,.25), rgba(90,58,30,.12) 80%); transition: background .25s ease, box-shadow .25s ease, border-color .25s ease, transform .25s ease; }
 .tap-dot.on { background: radial-gradient(circle at 38% 32%, #E6C877, #C28A3F 80%); border-color: #E6C877; box-shadow: 0 0 34px rgba(230,170,70,.45); transform: scale(1.08); }
+.tap-fig { display: flex; justify-content: center; }
+.tap-fig svg { width: min(42vw, 156px); height: auto; }
+#sheet-ici .ici-body { gap: 12px; }
+.tap-fig .hand { fill: #D4AF37; fill-opacity: .35; stroke: #D4AF37; stroke-width: 1.5; transition: fill-opacity .25s ease; }
+.tap-fig .hand.on { fill: #E6C877; fill-opacity: 1; filter: drop-shadow(0 0 6px rgba(230,170,70,.9)); }
+.tap-phrase { text-wrap: balance; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 24px; line-height: 1.25; color: #E6C877; text-align: center; margin: 0; }
+.tap-phrases { margin-top: 6px; }
 @media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
 .ici-body > * { animation: iciIn .5s ease both; }
 @media (prefers-reduced-motion: reduce) { .ici-body > * { animation: none; } }
@@ -520,7 +529,10 @@ body {
       <div class="ici-body">
         <h3 id="ici-title">Tapoter</h3>
         <p id="ici-text" aria-live="polite"></p>
-        <div class="tap-box" id="tap-box" aria-hidden="true"><span class="tap-dot" id="tap-l"></span><span class="tap-dot" id="tap-r"></span></div>
+        <div class="tap-phrases chips" id="tap-phrases" role="group" aria-label="Phrase à répéter" hidden></div>
+        <div class="tap-fig" id="tap-fig" hidden></div>
+        <p class="tap-phrase" id="tap-phrase" hidden></p>
+        <div class="tap-box" id="tap-box"><div class="tap-col"><span class="tap-dot" id="tap-l"></span><span class="tap-lab" aria-hidden="true">main gauche</span></div><div class="tap-col"><span class="tap-dot" id="tap-r"></span><span class="tap-lab" aria-hidden="true">main droite</span></div></div>
       </div>
       <div class="row sheet-actions">
         <button class="btn" id="b-ici-next" type="button">Commencer</button>
@@ -755,15 +767,35 @@ body {
 
   // Revenir ici : un tapotage doux, un côté puis l'autre, au rythme de deux cercles
   var TAP = [
-    { w: "Poitrine", t: "Croise tes mains sur ta poitrine. Tapote doucement, une main puis l'autre, au rythme des cercles." },
-    { w: "Épaules", t: "Croise les bras, mains sur les épaules. Même rythme, à ta façon." },
-    { w: "Cuisses", t: "Pose les mains sur tes cuisses. Tapote un côté, puis l'autre." }
+    { w: "Poitrine", pose: "poitrine", alt: "Posture : les mains croisées sur la poitrine.", t: "Croise les mains sur ta poitrine, doigts vers les clavicules. Tapote doucement, une main puis l'autre." },
+    { w: "Épaules", pose: "epaules", alt: "Posture : les bras croisés, chaque main sur l'épaule opposée.", t: "Croise les bras, chaque main sur l'épaule opposée. Même rythme, à ta façon." },
+    { w: "Cuisses", pose: "cuisses", alt: "Posture : les mains posées sur les cuisses.", t: "Pose les mains à plat sur tes cuisses. Tapote un côté, puis l'autre." }
   ];
+  var PHRASES = ["Je suis là.", "Je prends un moment pour moi.", "Je reviens doucement."];
+  var tapPhrase = PHRASES[0];
+  function limb(x1, y1, x2, y2) {
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#D4AF37" stroke-width="13" stroke-linecap="round"/>' +
+           '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#211D1A" stroke-width="9.8" stroke-linecap="round"/>';
+  }
+  function hnd(cx, cy, side) { return '<circle class="hand hand-' + side + '" cx="' + cx + '" cy="' + cy + '" r="8"/>'; }
+  function bodySvg(end) {
+    return '<circle cx="100" cy="34" r="17" fill="none" stroke="#D4AF37" stroke-width="1.8"/><path d="M100 51 L100 62" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/>' +
+           '<path d="M62 80 Q100 62 138 80 L144 ' + end + ' Q100 ' + (end + 8) + ' 56 ' + end + ' Z" fill="none" stroke="#D4AF37" stroke-width="1.8" stroke-linejoin="round"/>';
+  }
+  function figureSvg(pose, alt) {
+    var inner = "";
+    if (pose === "poitrine") inner = bodySvg(172) + limb(62, 82, 52, 134) + limb(138, 82, 148, 134) + limb(52, 134, 112, 100) + limb(148, 134, 88, 100) + hnd(112, 100, "l") + hnd(88, 100, "r");
+    else if (pose === "epaules") inner = bodySvg(172) + limb(62, 82, 78, 134) + limb(138, 82, 122, 134) + limb(78, 134, 138, 84) + limb(122, 134, 62, 84) + hnd(138, 84, "l") + hnd(62, 84, "r");
+    else inner = '<ellipse cx="76" cy="176" rx="28" ry="15" fill="none" stroke="#D4AF37" stroke-width="1.8"/><ellipse cx="124" cy="176" rx="28" ry="15" fill="none" stroke="#D4AF37" stroke-width="1.8"/>' +
+      bodySvg(150) + limb(60, 84, 50, 128) + limb(140, 84, 150, 128) + limb(50, 128, 74, 166) + limb(150, 128, 126, 166) + hnd(74, 166, "l") + hnd(126, 166, "r");
+    return '<svg viewBox="0 0 200 200" role="img" aria-label="' + alt + '">' + inner + '</svg>';
+  }
   var tapStep = -1, tapTimer = null, tapSide = 0, iciFocus = null;
   function paintTapSound() { var b = $("b-tap-sound"); b.textContent = soundOn ? "Son : oui" : "Son : non"; b.setAttribute("aria-pressed", soundOn ? "true" : "false"); }
   function tapTick(side) {
     $("tap-l").className = "tap-dot" + (side === 0 ? " on" : "");
     $("tap-r").className = "tap-dot" + (side === 1 ? " on" : "");
+    paintHands(side);
     if (!soundOn) return;
     var ctx = getCtx(); if (!ctx) return;
     try {
@@ -776,6 +808,10 @@ body {
       o.start(t0); o2.start(t0); o.stop(t0 + .32); o2.stop(t0 + .32);
     } catch (e) {}
   }
+  function paintHands(side) {
+    Array.prototype.forEach.call(document.querySelectorAll("#tap-fig .hand-l"), function (e) { e.setAttribute("class", "hand hand-l" + (side === 0 ? " on" : "")); });
+    Array.prototype.forEach.call(document.querySelectorAll("#tap-fig .hand-r"), function (e) { e.setAttribute("class", "hand hand-r" + (side === 1 ? " on" : "")); });
+  }
   function tapStart() {
     clearInterval(tapTimer); tapSide = 0; tapTick(0);
     tapTimer = setInterval(function () { tapSide = 1 - tapSide; tapTick(tapSide); }, 1200);
@@ -783,23 +819,44 @@ body {
   function tapStop() {
     clearInterval(tapTimer); tapTimer = null;
     $("tap-l").className = "tap-dot"; $("tap-r").className = "tap-dot";
+    paintHands(-1);
+  }
+  function renderPhrases() {
+    var box = $("tap-phrases"); box.innerHTML = "";
+    PHRASES.forEach(function (ph) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.textContent = ph;
+      b.setAttribute("aria-pressed", ph === tapPhrase ? "true" : "false");
+      b.addEventListener("click", function () {
+        tapPhrase = ph;
+        Array.prototype.forEach.call(box.children, function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+      });
+      box.appendChild(b);
+    });
   }
   function paintIci() {
     var intro = tapStep < 0, fin = tapStep >= TAP.length;
     $("ici-title").hidden = fin;
     $("tap-box").hidden = fin;
     $("b-tap-sound").hidden = fin;
+    $("tap-phrases").hidden = !intro;
+    $("tap-fig").hidden = intro || fin;
+    $("tap-phrase").hidden = intro || fin;
     if (intro) {
       $("ici-title").textContent = "Tapoter";
-      $("ici-text").textContent = "Un tapotage doux, un côté puis l'autre. Tu peux le faire assis ou debout, les yeux ouverts ou fermés. Les cercles donnent le rythme.";
+      $("ici-text").textContent = "Un tapotage doux, un côté puis l'autre, au rythme des cercles. Choisis une phrase à répéter, dans ta tête ou à voix basse, à chaque tapotement.";
       $("b-ici-next").textContent = "Commencer";
+      renderPhrases();
     } else if (fin) {
       $("ici-text").textContent = "Tu peux rester ici encore un instant.";
       $("b-ici-next").textContent = "Fermer";
     } else {
       $("ici-title").textContent = TAP[tapStep].w;
       $("ici-text").textContent = TAP[tapStep].t;
+      $("tap-fig").innerHTML = figureSvg(TAP[tapStep].pose, TAP[tapStep].alt);
+      $("tap-phrase").textContent = "«\u00a0" + tapPhrase + "\u00a0»";
       $("b-ici-next").textContent = "Continuer";
+      paintHands(tapSide);
     }
     Array.prototype.forEach.call(document.querySelectorAll("#sheet-ici .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
   }

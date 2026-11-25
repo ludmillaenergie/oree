@@ -358,6 +358,20 @@ body {
 #v-accueil .more:hover { color: #E6C45A; }
 #v-accueil :focus-visible { outline-color: #D4AF37; }
 
+/* Orée : écran Poser compact, le bouton Commencer reste visible sur téléphone */
+#v-poser { gap: 12px; }
+#v-poser h2 { font-size: 38px; line-height: 1.05; }
+#v-poser .lead, #v-poser #pick-desc { margin: 0; }
+#v-poser .breath { display: contents; }
+#v-poser .orb-box, #v-poser .orb { width: 156px; height: 156px; }
+#v-poser .orb-box { align-self: center; margin-top: 4px; }
+#v-poser .orb-label { font-size: 26px; }
+#v-poser .count { text-align: center; min-height: 1.2em; margin: 0; }
+#v-poser .row {
+  position: sticky; bottom: 0; z-index: 5; justify-content: center;
+  padding: 18px 0 14px;
+  background: linear-gradient(to bottom, rgba(33,29,26,0), #211D1A 45%);
+}
 </style>
 </head>
 <body>
@@ -802,6 +816,10 @@ body {
 
   show((location.hash || "").replace("#", "") || "accueil");
 })();
+document.getElementById("b-start").addEventListener("click", function () {
+  var o = document.querySelector("#v-poser .orb-box");
+  if (o && o.scrollIntoView) { try { o.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { o.scrollIntoView(); } }
+});
 if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 </script>
 </body>

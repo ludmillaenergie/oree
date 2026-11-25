@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orée</title>
+<meta name="description" content="Un moment pour respirer, tirer une carte, écouter ou déposer quelques mots.">
+<meta name="theme-color" content="#211D1A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Orée">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Orée">
+<meta property="og:description" content="Un moment pour respirer, tirer une carte, écouter ou déposer quelques mots.">
+<meta property="og:image" content="https://ludmillaenergie.github.io/oree/icons/share.png">
+<meta property="og:url" content="https://ludmillaenergie.github.io/oree/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Raleway:wght@500&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+/* Plan : une brume de lune, un encre bleu profond, un sable doré réservé à la carte.
+   Mise en page : colonne unique de 520px, trois grandes portes en italique serif. */
+:root {
+  --bg: #edeff5;
+  --surface: #f8f9fc;
+  --ink: #1d2433;
+  --muted: #5a6377;
+  --line: #d6dae6;
+  --accent: #4f63b0;
+  --accent-ink: #ffffff;
+  --glow: #ecd9bd;
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1420;
+    --surface: #171e2e;
+    --ink: #e8eaf2;
+    --muted: #9aa3b8;
+    --line: #2a3347;
+    --accent: #a3b2f2;
+    --accent-ink: #0f1420;
+    --glow: #d9c3a0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1420;
+  --surface: #171e2e;
+  --ink: #e8eaf2;
+  --muted: #9aa3b8;
+  --line: #2a3347;
+  --accent: #a3b2f2;
+  --accent-ink: #0f1420;
+  --glow: #d9c3a0;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.55;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.eyebrow {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+h1, h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  line-height: 1.08;
+  margin: 0;
+  text-wrap: balance;
+}
+h1 { font-size: clamp(34px, 9.5vw, 42px); font-style: italic; }
+h2 { font-size: 44px; font-style: italic; }
+p { margin: 0; max-width: 65ch; }
+.lead { color: var(--muted); }
+
+.doors { display: flex; flex-direction: column; gap: 10px; }
+.brand { display: flex; flex-direction: column; gap: 8px; }
+#v-accueil { gap: 16px; }
+.door {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 14px;
+  text-align: left;
+  width: 100%;
+  background: var(--surface);
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 15px 18px 15px;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .2s, transform .2s;
+}
+.door:hover { border-color: var(--accent); }
+.door:active { transform: scale(.995); }
+.door .name {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 34px;
+  line-height: 1;
+}
+.door .desc { grid-column: 1 / 2; color: var(--muted); font-size: 15px; line-height: 1.4; }
+.door svg { grid-row: 1 / 3; grid-column: 2; width: 40px; height: 40px; color: var(--accent); }
+
+
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
+
+.back {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  font: inherit;
+  font-size: 15px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.back:hover { color: var(--ink); }
+.view { display: flex; flex-direction: column; gap: 24px; }
+.view[hidden] { display: none; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.pending { background: transparent; color: var(--muted); border-style: dashed; border-color: var(--line); cursor: default; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Respiration */
+.breath { display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 8px 0 4px; }
+.orb-box { position: relative; width: 240px; height: 240px; display: grid; place-items: center; }
+.orb-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--line); }
+.orb {
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, var(--glow), color-mix(in srgb, var(--accent) 55%, var(--surface)) 78%);
+  transform: scale(.5);
+  transition: transform 5s ease-in-out;
+}
+.orb.in { transform: scale(1); }
+.orb-label {
+  position: absolute; font-family: var(--display); font-style: italic; font-size: 34px;
+  color: var(--ink); mix-blend-mode: normal; text-shadow: 0 0 14px var(--bg);
+}
+.breath .count { color: var(--muted); font-size: 15px; min-height: 1.5em; }
+@media (prefers-reduced-motion: reduce) { .orb { transition: none; } .door { transition: none; } }
+
+/* Carte */
+.stage { display: flex; justify-content: center; }
+.card {
+  width: min(100%, 340px);
+  min-height: 420px;
+  border-radius: 24px;
+  padding: 28px 26px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 22px;
+}
+.card.back-face {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  align-items: center; justify-content: center; text-align: center;
+  color: var(--muted);
+}
+.card.back-face svg { width: 84px; height: 84px; color: var(--accent); }
+.card.front {
+  background: linear-gradient(170deg, var(--glow), color-mix(in srgb, var(--glow) 40%, var(--surface)));
+  color: #1d2433;
+  border: 1px solid color-mix(in srgb, var(--glow) 70%, #1d2433);
+  animation: rise .7s ease both;
+}
+.card .word { font-family: var(--display); font-style: italic; font-size: 52px; line-height: 1; }
+.card .msg { font-size: 19px; line-height: 1.5; }
+.card .gesture { border-top: 1px solid rgba(29,36,51,.25); padding-top: 14px; font-size: 16px; }
+.card .gesture b { display: block; font-weight: 600; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card.front { animation: none; } }
+
+/* Carnet */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  min-height: 40px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  font: inherit; font-size: 15px; cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+textarea {
+  width: 100%; min-height: 130px; resize: vertical;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px;
+  font: inherit; line-height: 1.5;
+}
+textarea::placeholder { color: var(--muted); }
+.notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.note .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--muted); }
+.note .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.note button { background: none; border: 0; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; padding: 0; }
+.note button:hover { color: var(--ink); }
+.small { font-size: 14px; color: var(--muted); }
+
+.orb-label { text-align: center; max-width: 190px; line-height: 1.05; font-size: 30px; }
+
+/* Mes autres applis */
+.more {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 0 2px; background: none; border: 0;
+  color: var(--muted); font: inherit; font-size: 16px; cursor: pointer;
+  text-decoration: none;
+}
+.more .u { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.more:hover { color: var(--ink); }
+.apps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.app {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+  padding: 20px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+}
+.app .name { font-family: var(--display); font-style: italic; font-size: 32px; line-height: 1.05; margin: 0; }
+.app .lead { font-size: 16px; line-height: 1.45; }
+.app .price { font-size: 15px; font-weight: 600; margin: 0; }
+.app .btn { min-height: 44px; margin-top: 2px; }
+.app .btn[aria-disabled="true"] { cursor: default; }
+@media (max-width: 480px) {
+  .apps { gap: 10px; }
+  .app { padding: 16px 16px 18px; gap: 8px; border-radius: 18px; }
+  .app .name { font-size: 29px; }
+}
+
+/* Écouter */
+.tracks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.track {
+  display: grid; grid-template-columns: 52px 1fr; gap: 6px 16px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px;
+}
+.play {
+  grid-row: 1 / 3; width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; cursor: pointer; padding: 0;
+}
+.play svg { width: 22px; height: 22px; }
+.play:disabled { background: transparent; color: var(--muted); border-style: dashed; border-color: var(--line); cursor: default; }
+.track .t { font-family: var(--display); font-style: italic; font-size: 25px; line-height: 1.15; }
+.track .s { font-size: 14px; color: var(--muted); }
+.track.soon { grid-template-columns: 1fr; padding: 16px 18px; }
+.track .soon-tag { margin-top: 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.track .bar { grid-column: 2; height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.track .bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+/* Invitation */
+.offer {
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.offer .label { font-size: 14px; color: var(--muted); letter-spacing: .04em; margin: 0; }
+.offer .title { font-family: var(--display); font-style: italic; font-size: 30px; line-height: 1.1; margin: 0; }
+.offer .row { margin-top: 6px; }
+
+.foot { border-top: 1px solid var(--line); padding-top: 16px; }
+
+/* Orée : ambiance sombre et ambrée sur tous les écrans */
+html:root, html:root[data-theme="light"], html:root[data-theme="dark"] {
+  --bg: #211D1A; --surface: #30241F; --ink: #F5E9DA; --muted: #D9CBB8;
+  --line: rgba(212,175,55,.5); --accent: #D4AF37; --accent-ink: #211D1A; --glow: #E6C877;
+  --display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --body: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+body { font-family: var(--body); font-weight: 500; }
+h2 { font-weight: 600; font-size: 48px; color: var(--ink); }
+.back { color: var(--accent); }
+.back:hover { color: #E6C45A; }
+.btn { font-weight: 600; }
+.btn.ghost:hover { background: rgba(212,175,55,.12); }
+.chip { border-color: rgba(212,175,55,.5); }
+.chip:hover { border-color: var(--accent); }
+.orb { background: radial-gradient(circle at 38% 32%, #C28A3F, #5A3A1E 80%); box-shadow: 0 0 60px rgba(212,150,60,.25); }
+.orb-label { color: var(--ink); font-weight: 600; text-shadow: 0 1px 12px rgba(33,29,26,.9); }
+.card .word, .app .name, .door .name { font-weight: 600; }
+.card.front {
+  background: linear-gradient(170deg, #EBD08A, #D9B558);
+  color: #2A1B13; border: 1px solid #D4AF37;
+}
+.card .gesture { border-top-color: rgba(42,27,19,.3); }
+.track, .note, .app, textarea { border-color: rgba(212,175,55,.5); }
+textarea:focus { outline: none; border-color: var(--accent); }
+.foot { color: #D9CBB8; }
+.wrap { border-color: rgba(212,175,55,.25); }
+/* Orée : accueil sombre et chaud, ambiance Ludmilla Énergie */
+body {
+  background:
+    radial-gradient(520px 420px at 108% -6%, rgba(236,160,64,.62) 0%, rgba(214,134,50,.38) 28%, rgba(176,104,40,.16) 58%, rgba(33,29,26,0) 100%),
+    linear-gradient(205deg, rgba(150,88,34,.30) 0%, rgba(110,66,30,.14) 22%, rgba(33,29,26,0) 40%),
+    #211D1A;
+  background-repeat: no-repeat; background-color: #211D1A;
+  color: #F5E9DA;
+}
+.foot { color: #D9CBB8; }
+#v-accueil {
+  --display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --body: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--body); font-weight: 500; color: #F5E9DA;
+}
+#v-accueil h1 {
+  font-family: "Pinyon Script", "Snell Roundhand", "Brush Script MT", cursive;
+  font-style: normal; font-weight: 400; color: #D4AF37;
+  font-size: clamp(64px, 19vw, 80px); line-height: 1.2;
+  padding: 16px 0 0 4px; margin-bottom: -14px; letter-spacing: .01em;
+}
+#v-accueil .lead { color: #E6D8C4; font-weight: 500; font-size: 16.5px; }
+#v-accueil .small { color: #D9CBB8; font-weight: 500; }
+#v-accueil .door {
+  background: #30241F; border: 1px solid #D4AF37; color: #F5E9DA;
+  padding: 14px 14px 14px 18px; gap: 4px 10px;
+}
+#v-accueil .door .name { color: #F5E9DA; font-weight: 600; font-size: 36px; }
+#v-accueil .door .desc { color: #E6D8C4; font-weight: 500; font-size: 15px; line-height: 1.4; text-wrap: pretty; }
+#v-accueil .door svg { color: #D4AF37; width: 36px; height: 36px; }
+#v-accueil .door:hover { border-color: #D4AF37; background: #382a24; }
+#v-accueil .more { color: #D4AF37; font-weight: 500; }
+#v-accueil .more:hover { color: #E6C45A; }
+#v-accueil :focus-visible { outline-color: #D4AF37; }
+
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- Accueil -->
+  <section class="view" id="v-accueil">
+    <header class="brand">
+      <h1>Orée</h1>
+      <p class="lead">Un moment pour respirer, tirer une carte, écouter ou déposer quelques mots.</p>
+    </header>
+    <div class="doors">
+      <button class="door" data-go="poser">
+        <span class="name">Poser</span>
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="22" cy="22" r="19"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="3.5" fill="currentColor" stroke="none"/></svg>
+        <span class="desc">Une minute pour respirer, à ton rythme.</span>
+      </button>
+      <button class="door" data-go="eclairer">
+        <span class="name">Éclairer</span>
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M30 8a15 15 0 1 0 6 25A12 12 0 0 1 30 8Z"/><path d="M33 15l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="currentColor" stroke="none"/></svg>
+        <span class="desc">La carte du jour et un petit geste à essayer.</span>
+      </button>
+      <button class="door" data-go="ecouter">
+        <span class="name">Écouter</span>
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 19v6M15 14v16M22 8v28M29 14v16M36 19v6"/></svg>
+        <span class="desc">Des audios courts, guidés par ma voix.</span>
+      </button>
+      <button class="door" data-go="noter">
+        <span class="name">Noter</span>
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 28c5-9 9-9 14 0s9 9 14 0 4-6 4-6"/><path d="M6 36h32" opacity=".5"/></svg>
+        <span class="desc">Un carnet pour tes rêves, tes synchronicités et tes ressentis.</span>
+      </button>
+    </div>
+    <p class="small">Gratuit. Aucun compte à créer.</p>
+    <button class="more" data-go="applis"><span class="u">Mes autres applis</span> <span aria-hidden="true">→</span></button>
+  </section>
+
+  <!-- Poser -->
+  <section class="view" id="v-poser" hidden>
+    <button class="back" data-go="accueil">← Retour</button>
+    <h2>Poser</h2>
+    <p class="lead">Choisis une respiration. Le cercle guide le rythme.</p>
+    <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
+    <p id="pick-desc"></p>
+    <p class="small" id="pick-warn" hidden>Si la tête tourne, revenir à une respiration naturelle. Chacun va à son rythme.</p>
+    <div class="breath">
+      <div class="orb-box">
+        <div class="orb-ring"></div>
+        <div class="orb" id="orb"></div>
+        <div class="orb-label" id="orb-label" aria-live="polite">Prêt</div>
+      </div>
+      <div class="count" id="count"></div>
+      <div class="row">
+        <button class="btn" id="b-start">Commencer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Éclairer -->
+  <section class="view" id="v-eclairer" hidden>
+    <button class="back" data-go="accueil">← Retour</button>
+    <h2>Éclairer</h2>
+    <p class="lead">Une carte pour aujourd'hui. Elle reste la même jusqu'à demain.</p>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <!-- Mes autres applis -->
+  <section class="view" id="v-applis" hidden>
+    <button class="back" data-go="accueil">← Retour à l'accueil</button>
+    <h2>Mes autres applis</h2>
+    <p class="lead">Retrouve ici mes accompagnements et mes oracles.</p>
+    <ul class="apps" id="apps"></ul>
+  </section>
+
+  <!-- Écouter -->
+  <section class="view" id="v-ecouter" hidden>
+    <button class="back" data-go="accueil">← Retour</button>
+    <h2>Écouter</h2>
+    <p class="lead">Des audios courts, guidés par ma voix. Tu peux les écouter au casque si tu en as envie.</p>
+    <ul class="tracks" id="tracks"></ul>
+  </section>
+
+  <!-- Noter -->
+  <section class="view" id="v-noter" hidden>
+    <button class="back" data-go="accueil">← Retour</button>
+    <h2>Noter</h2>
+    <p class="lead">Un rêve, une heure miroir, une phrase entendue, un ressenti. Écrire ce qui est venu, tel quel.</p>
+    <div class="chips" role="group" aria-label="Type de note" id="chips">
+      <button class="chip" aria-pressed="true" data-tag="Rêve">Rêve</button>
+      <button class="chip" aria-pressed="false" data-tag="Synchronicité">Synchronicité</button>
+      <button class="chip" aria-pressed="false" data-tag="Ressenti">Ressenti</button>
+    </div>
+    <textarea id="note-text" aria-label="Ta note" placeholder="Ce qui est venu."></textarea>
+    <div class="row"><button class="btn" id="b-save">Garder</button></div>
+    <ul class="notes" id="notes"></ul>
+    <p class="small" id="store-note"></p>
+  </section>
+
+  <p class="small foot" id="foot"></p>
+</main>
+
+<script>
+(function () {
+  var CARDS = [
+    { w: "Fatigue", m: "Quand on a beaucoup porté, même les petites choses peuvent demander un effort.", g: "Choisir une chose qu’on peut faire plus simplement aujourd’hui." },
+    { w: "Miroir", m: "Ce qui touche chez les autres parle un peu de soi. Observer sans conclure.", g: "Noter une chose qui a touché aujourd’hui, sans l’expliquer." },
+    { w: "Mue", m: "Certaines choses tombent seules quand leur temps est passé. Inutile de les arracher.", g: "Repérer ce qui pèse et le laisser tranquille pour aujourd’hui." },
+    { w: "Douceur", m: "Se parler comme on parlerait à quelqu’un que l’on aime.", g: "Remplacer une phrase dure par une phrase simple." },
+    { w: "Feu", m: "Un petit feu suffit. Il n’a pas besoin d’être nourri fort.", g: "Faire une petite chose qui fait plaisir, sans raison." },
+    { w: "Seuil", m: "On sent parfois qu’une chose se termine avant de savoir ce qui commence. On peut en être là aujourd’hui.", g: "Au prochain passage d’une porte, marquer une seconde d’arrêt avant d’avancer." },
+    { w: "Rester", m: "Parfois, dès que quelque chose nous remue, on se trouve un truc à faire. On peut rester là juste assez longtemps pour sentir ce qui se passe.", g: "Poser le téléphone un instant et nommer ce qu’on ressent, même si le mot est encore un peu flou." },
+    { w: "Souffle", m: "On passe parfois d’une chose à l’autre si vite qu’on ne sent même plus qu’on respire.", g: "Laisser passer trois respirations comme elles viennent." },
+    { w: "Silence", m: "Même quand tout se tait autour, ça peut encore parler fort dedans.", g: "Laisser la prochaine petite attente se passer sans la remplir." },
+    { w: "Eau", m: "On boit parfois un verre entier sans avoir vraiment senti qu’on buvait.", g: "À la prochaine gorgée, sentir simplement la température de l’eau." },
+    { w: "Évidence", m: "On peut savoir quelque chose depuis longtemps et continuer à dire « je ne sais pas ». Le reconnaître, ça peut rester entre soi et soi.", g: "Écrire une phrase qui commence par « Je sais que… » et la garder pour soi." },
+    { w: "Lune", m: "Le soir, tout ce qui reste à faire prend parfois plus de place. Il y a des choses qu’on peut reprendre demain.", g: "Ce soir, couper une lumière forte et garder une lampe douce." },
+    { w: "Racine", m: "Ce qui nous aide à tenir tient parfois à peu de chose. Une voix familière. Un lieu où l’on respire mieux.", g: "Penser à une présence ou à un endroit qui fait cet effet-là." },
+    { w: "Limite", m: "Le oui sort parfois avant qu’on ait eu le temps de voir si on en avait envie.", g: "Si une demande arrive aujourd’hui, essayer « Je te réponds un peu plus tard. »" },
+    { w: "Corps", m: "On remarque parfois qu’on serrait les dents au moment où on les desserre.", g: "Sentir où repose le poids du corps, là où l’on se trouve." },
+    { w: "Enfance", m: "Une phrase qu’on aurait aimé entendre enfant peut encore nous toucher aujourd’hui.", g: "Si une phrase vient, la dire doucement ou l’écrire." },
+    { w: "Merci", m: "Il y a des jours où tout ce qu’on retient, c’est ce qui a coincé. Un détail agréable a pu passer au milieu.", g: "Repenser un instant à un détail qui a fait du bien, s’il en vient un." },
+    { w: "Attente", m: "On attend parfois des autres qu’ils aient compris sans qu’on ait rien dit. Ce qui reste dans la tête ne s’entend pas de l’extérieur.", g: "Dire à quelqu’un, en une phrase, une chose précise dont on a besoin." },
+    { w: "Habitude", m: "On continue parfois une chose seulement parce qu’on l’a toujours faite. Elle est là, sans qu’on l’ait choisie un jour.", g: "Changer un petit détail de sa routine aujourd’hui : le trajet, la tasse du matin." },
+    { w: "Place", m: "On s’efface parfois sans s’en apercevoir, pour que tout se passe bien.", g: "Au prochain choix, même minuscule, prendre ce qui nous plaît à nous." },
+    { w: "Joie", m: "On peut avoir une journée compliquée et rire franchement au milieu. Ce moment-là compte aussi.", g: "Remettre une chanson qui donne envie de chanter, même juste le refrain." },
+    { w: "Traversée", m: "Il y a des jours où tout ce qu’on voit, c’est le bout de chemin qu’on a devant soi. C’est déjà de quoi avancer un peu.", g: "Marcher quelques minutes en prêtant attention à ce qu’on croise." },
+    { w: "Comparaison", m: "Il suffit parfois de faire défiler quelques photos pour se mettre à trouver sa propre journée bien terne.", g: "Quand ça arrive, poser l’écran et reprendre ce qu’on faisait juste avant." },
+    { w: "Colère", m: "Parfois, on connaît déjà la phrase qu’on va regretter et on est quand même sur le point de la dire.", g: "Si la discussion chauffe, dire « J’ai besoin d’une minute » et prendre cette minute." },
+    { w: "Décision", m: "On tourne parfois autour d’un choix alors qu’il nous manque juste une information pour y voir plus clair.", g: "Chercher une seule information qui aiderait à choisir." },
+    { w: "Horizon", m: "On passe parfois une journée entière sans regarder plus loin que l’écran.", g: "Regarder au loin une minute, par la fenêtre ou dehors." },
+    { w: "Écoute", m: "On écoute parfois en préparant déjà la réponse.", g: "Dans la prochaine conversation, redire en une phrase ce que l’autre vient de dire, avant de répondre." },
+    { w: "Déjà", m: "On regarde souvent ce qui reste à faire avant de voir ce qui est déjà fait.", g: "Nommer une chose faite aujourd’hui, même minuscule, et la laisser compter." },
+    { w: "Lien", m: "Quelqu’un nous revient en tête en entendant une chanson ou en passant devant un endroit. On peut le lui dire, tout simplement.", g: "Envoyer quelques mots à cette personne, si on en a envie." },
+    { w: "Peur", m: "Quand la peur monte, on peut se retrouver à vivre la suite dans sa tête alors qu’elle n’est pas encore arrivée.", g: "Regarder autour de soi et nommer trois choses qu’on voit." }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var views = ["accueil", "poser", "eclairer", "ecouter", "noter", "applis"];
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Navigation par hash simple
+  function show(name) {
+    if (views.indexOf(name) < 0) name = "accueil";
+    views.forEach(function (v) { $("v-" + v).hidden = (v !== name); });
+    if (name !== "poser") stopBreath(true);
+    if (name !== "ecouter") stopAll();
+    $("foot").textContent = "";
+    window.scrollTo(0, 0);
+  }
+  function go(name) {
+    try { location.hash = name === "accueil" ? "" : name; } catch (e) {}
+    show(name);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-go]"), function (b) {
+    b.addEventListener("click", function () { go(b.getAttribute("data-go")); });
+  });
+  window.addEventListener("hashchange", function () { show((location.hash || "").replace("#", "") || "accueil"); });
+
+  // Respiration : plusieurs rythmes, le cercle suit chaque temps
+  var PATTERNS = [
+    { name: "Souffle égal", desc: "5 secondes pour inspirer, 5 pour expirer. Pour se poser.", cycles: 6, hold: false,
+      phases: [{ l: "Inspire", ms: 5000, s: 1 }, { l: "Expire", ms: 5000, s: .5 }] },
+    { name: "Souffle long", desc: "4 secondes pour inspirer, 6 pour expirer. Quand la tension monte.", cycles: 6, hold: false,
+      phases: [{ l: "Inspire", ms: 4000, s: 1 }, { l: "Expire", ms: 6000, s: .5 }] },
+    { name: "Souffle carré", desc: "4 secondes pour chaque temps : inspirer, garder, expirer, garder. Pour retrouver de la stabilité.", cycles: 4, hold: true,
+      phases: [{ l: "Inspire", ms: 4000, s: 1 }, { l: "Garde", ms: 4000, s: 1 }, { l: "Expire", ms: 4000, s: .5 }, { l: "Pause", ms: 4000, s: .5 }] },
+    { name: "Souffle du soir", desc: "4 secondes pour inspirer, 7 pour garder, 8 pour expirer. Pour le coucher.", cycles: 4, hold: true,
+      phases: [{ l: "Inspire", ms: 4000, s: 1 }, { l: "Garde", ms: 7000, s: 1 }, { l: "Expire", ms: 8000, s: .5 }] },
+    { name: "Soupir", desc: "Deux petites inspirations par le nez, puis une longue expiration par la bouche. Pour relâcher vite.", cycles: 6, hold: false,
+      phases: [{ l: "Inspire", ms: 1500, s: .8 }, { l: "Encore un peu", ms: 1500, s: 1 }, { l: "Expire longuement", ms: 6000, s: .5 }] },
+    { name: "Bourdonnement", desc: "Inspirer, puis expirer en fredonnant un « mmm » grave. On sent la vibration dans la poitrine.", cycles: 5, hold: false,
+      phases: [{ l: "Inspire", ms: 4000, s: 1 }, { l: "Expire en fredonnant", ms: 8000, s: .5 }] },
+    { name: "Souffle alterné", desc: "Pour aller plus loin. Main droite devant le nez : le pouce ferme la narine droite, l'annulaire ferme la gauche. On inspire d'un côté, on change, on expire de l'autre. Si le nez est bouché, passer son tour.", cycles: 5, hold: false,
+      phases: [{ l: "Inspire à gauche", ms: 4000, s: 1 }, { l: "Expire à droite", ms: 4000, s: .5 }, { l: "Inspire à droite", ms: 4000, s: 1 }, { l: "Expire à gauche", ms: 4000, s: .5 }] }
+  ];
+  var pat = PATTERNS[0];
+  var timer = null, running = false;
+  function setOrb(scale, ms) {
+    var o = $("orb");
+    o.style.transition = reduce ? "none" : "transform " + ms + "ms ease-in-out";
+    o.style.transform = "scale(" + scale + ")";
+  }
+  function stopBreath(silent) {
+    running = false;
+    clearTimeout(timer);
+    setOrb(.5, 600);
+    $("b-start").textContent = "Commencer";
+    if (silent) { $("orb-label").textContent = "Prêt"; $("count").textContent = ""; }
+  }
+  function startBreath() {
+    if (running) { stopBreath(true); return; }
+    running = true;
+    $("b-start").textContent = "Arrêter";
+    var cycle = 1, i = 0;
+    function finish() {
+      running = false;
+      setOrb(.5, 1200);
+      $("orb-label").textContent = "Voilà";
+      $("count").textContent = "On peut recommencer, ou rester là un moment.";
+      $("b-start").textContent = "Recommencer";
+    }
+    function step() {
+      if (!running) return;
+      var ph = pat.phases[i];
+      $("orb-label").textContent = ph.l;
+      $("count").textContent = cycle + " sur " + pat.cycles;
+      setOrb(ph.s, ph.ms);
+      timer = setTimeout(function () {
+        i++;
+        if (i >= pat.phases.length) { i = 0; cycle++; if (cycle > pat.cycles) { finish(); return; } }
+        step();
+      }, ph.ms);
+    }
+    step();
+  }
+  $("b-start").addEventListener("click", startBreath);
+  function showDesc() { $("pick-desc").textContent = pat.desc; $("pick-warn").hidden = !pat.hold; }
+  (function buildPicks() {
+    var picks = $("picks");
+    PATTERNS.forEach(function (p, idx) {
+      var b = document.createElement("button");
+      b.className = "chip"; b.textContent = p.name;
+      b.setAttribute("aria-pressed", idx === 0 ? "true" : "false");
+      b.addEventListener("click", function () {
+        pat = p;
+        Array.prototype.forEach.call(picks.children, function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+        stopBreath(true);
+        showDesc();
+      });
+      picks.appendChild(b);
+    });
+    showDesc();
+  })();
+
+  // Carte du jour : la même toute la journée
+  function todayIndex() {
+    // Jours écoulés (date locale) : deux jours de suite ne donnent jamais la même carte.
+    var t = new Date();
+    var days = Math.floor(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) / 86400000);
+    return days % CARDS.length;
+  }
+  function backFace() {
+    var stage = $("stage");
+    stage.innerHTML = "";
+    var c = document.createElement("div");
+    c.className = "card back-face";
+    c.innerHTML = '<svg viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="42" cy="42" r="34"/><circle cx="42" cy="42" r="22" opacity=".6"/><path d="M42 8v68M8 42h68" opacity=".35"/></svg>';
+    var p = document.createElement("p");
+    p.textContent = "Prendre une respiration, puis la retourner.";
+    var b = document.createElement("button");
+    b.className = "btn";
+    b.textContent = "Retourner la carte";
+    b.addEventListener("click", reveal);
+    c.appendChild(p); c.appendChild(b);
+    stage.appendChild(c);
+  }
+  function reveal() {
+    var k = CARDS[todayIndex()];
+    var stage = $("stage");
+    stage.innerHTML = "";
+    var c = document.createElement("article");
+    c.className = "card front";
+    var w = document.createElement("div"); w.className = "word"; w.textContent = k.w;
+    var m = document.createElement("p"); m.className = "msg"; m.textContent = k.m;
+    var g = document.createElement("div"); g.className = "gesture";
+    var gb = document.createElement("b"); gb.textContent = "Un petit geste";
+    var gt = document.createElement("span"); gt.textContent = k.g;
+    g.appendChild(gb); g.appendChild(gt);
+    c.appendChild(w); c.appendChild(m); c.appendChild(g);
+    stage.appendChild(c);
+  }
+  backFace();
+
+  // Mes autres applis : la seule page qui présente les offres.
+  // Pour ajouter une appli, copier une ligne et remplir name, phrase, price et url.
+  // Un champ laissé vide ("") n'est simplement pas affiché sur la page.
+  // PUBLIC = false : toutes les cartes sont visibles, pour pouvoir les compléter (prototype).
+  // PUBLIC = true : une carte n'apparaît que si phrase, price et url sont remplis.
+  var PUBLIC = false;
+  var SHOW_APPS = false; // mettre true le jour où la page « Mes autres applis » doit apparaître
+  var APPS = [
+    { name: "Le Passage",
+      phrase: "Un accompagnement à ton rythme, pour mettre des mots sur ce que tu traverses et prendre le temps d’y voir plus clair.",
+      price: "20 € par mois",
+      url: "https://ludmillaenergie.fr/passage.html" },
+    { name: "Le Repère",
+      phrase: "Chaque jour, une lecture personnalisée qui croise ton thème natal, ton Human Design, tes Gene Keys et ta numérologie.",
+      price: "7,90 € par mois, sans engagement",
+      url: "https://ludmillaenergie.fr/le-repere.html" },
+    { name: "Oracle de Traversée",
+      phrase: "34 cartes d’introspection pour mettre des mots sur ce que tu traverses, à tirer à ton rythme.",
+      price: "17 €",
+      url: "https://ludmillaenergie.fr/oracle-traversee.html" },
+    { name: "Oracle des Évidences",
+      phrase: "34 cartes pour mieux comprendre les liens d’âme et ce qu’ils viennent réveiller en toi.",
+      price: "17 €",
+      url: "https://ludmillaenergie.fr/oracle-evidences.html" },
+    { name: "Oracle d’Héméra",
+      phrase: "36 cartes pour explorer ce que tu vis en amour et mettre des mots sur ce que tu ressens.",
+      price: "17 €",
+      url: "https://ludmillaenergie.fr/oracle-hemera.html" }
+  ];
+  (function buildApps() {
+    var ul = $("apps");
+    if (!SHOW_APPS) { var lk0 = document.querySelector('[data-go="applis"].more'); if (lk0) lk0.hidden = true; }
+    var shown = APPS.filter(function (a) { return !PUBLIC || (a.phrase && a.price && a.url); });
+    if (PUBLIC && !shown.length) {
+      var lk = document.querySelector('[data-go="applis"]');
+      if (lk && lk.className === "more") lk.hidden = true;
+    }
+    shown.forEach(function (a) {
+      var li = document.createElement("li"); li.className = "app";
+      var h = document.createElement("h3"); h.className = "name"; h.textContent = a.name;
+      li.appendChild(h);
+      if (a.phrase) { var ph = document.createElement("p"); ph.className = "lead"; ph.textContent = a.phrase; li.appendChild(ph); }
+      if (a.price) { var pr = document.createElement("p"); pr.className = "price"; pr.textContent = a.price; li.appendChild(pr); }
+      var b;
+      if (a.url) {
+        b = document.createElement("a"); b.href = a.url; b.target = "_blank"; b.rel = "noopener";
+      } else {
+        b = document.createElement("span"); b.setAttribute("aria-disabled", "true");
+      }
+      b.className = "btn"; b.textContent = "Découvrir";
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+  })();
+
+  // Écouter : lecteur intégré, un seul audio à la fois.
+  // Renseigner src avec le chemin du fichier (ex. "audio/sommeil.mp3") quand l'enregistrement existe.
+  var TRACKS = [
+    { t: "Entrer dans le sommeil", s: "Relaxation du soir", src: "audio/sommeil.mp3" },
+    { t: "Rendre à chacun ce qui est à lui", s: "Hypersensibilité et surcharge émotionnelle", src: "audio/rendre.mp3" },
+    { t: "Déposer la fatigue", s: "Repos et charge mentale", src: null },
+    { t: "Laisser tomber ce qui a fait son temps", s: "Lâcher-prise et fin de cycle", src: null },
+    { t: "Retrouver la douceur envers soi", s: "Bienveillance et amour de soi", src: null },
+    { t: "Rencontrer l'enfant intérieur", s: "Reconnexion à son enfant intérieur", src: null }
+  ];
+  var ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  var ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
+  var current = null;
+  function stopAll() {
+    if (current) { current.audio.pause(); current.idle(); current = null; }
+  }
+  (function buildTracks() {
+    var ul = $("tracks");
+    TRACKS.forEach(function (k) {
+      var li = document.createElement("li"); li.className = "track";
+      var box = document.createElement("div");
+      var t = document.createElement("div"); t.className = "t"; t.textContent = k.t;
+      var s = document.createElement("div"); s.className = "s"; s.textContent = k.s;
+      box.appendChild(t); box.appendChild(s);
+      if (!k.src) {
+        li.className = "track soon";
+        var soon = document.createElement("div"); soon.className = "soon-tag"; soon.textContent = "Bientôt disponible";
+        box.appendChild(soon); li.appendChild(box); ul.appendChild(li);
+        return;
+      }
+      var btn = document.createElement("button"); btn.className = "play";
+      btn.innerHTML = ICON_PLAY; btn.setAttribute("aria-label", "Écouter : " + k.t);
+      var bar = document.createElement("div"); bar.className = "bar";
+      var fill = document.createElement("i"); bar.appendChild(fill);
+      li.appendChild(btn); li.appendChild(box); li.appendChild(bar);
+      ul.appendChild(li);
+      var audio = new Audio(); audio.preload = "none"; audio.src = k.src;
+      var me = {
+        audio: audio,
+        idle: function () { btn.innerHTML = ICON_PLAY; btn.setAttribute("aria-label", "Écouter : " + k.t); }
+      };
+      audio.addEventListener("timeupdate", function () {
+        if (audio.duration) fill.style.width = (100 * audio.currentTime / audio.duration) + "%";
+      });
+      audio.addEventListener("ended", function () { fill.style.width = "0"; me.idle(); if (current === me) current = null; });
+      audio.addEventListener("error", function () { s.textContent = k.s + " · audio indisponible"; btn.disabled = true; me.idle(); });
+      btn.addEventListener("click", function () {
+        if (current === me && !audio.paused) { audio.pause(); me.idle(); return; }
+        if (current && current !== me) stopAll();
+        current = me;
+        var p = audio.play();
+        if (p && p.catch) p.catch(function () { me.idle(); });
+        btn.innerHTML = ICON_PAUSE; btn.setAttribute("aria-label", "Mettre en pause : " + k.t);
+      });
+    });
+  })();
+
+  // Carnet : stocké sur l'appareil
+  var KEY = "itn-notes-v1", store = true, memory = [], tag = "Rêve";
+  function load() {
+    try { var raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : []; }
+    catch (e) { store = false; return memory; }
+  }
+  function save(list) {
+    memory = list;
+    try { localStorage.setItem(KEY, JSON.stringify(list)); }
+    catch (e) { store = false; }
+  }
+  function render() {
+    var list = load();
+    var ul = $("notes");
+    ul.innerHTML = "";
+    if (!list.length) {
+      var li = document.createElement("li");
+      li.className = "small";
+      li.textContent = "Rien de noté pour l'instant.";
+      ul.appendChild(li);
+    }
+    list.forEach(function (n, i) {
+      var li = document.createElement("li"); li.className = "note";
+      var meta = document.createElement("div"); meta.className = "meta";
+      var a = document.createElement("span");
+      var dt = new Date(n.t);
+      a.textContent = n.tag + " · " + dt.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+      var del = document.createElement("button"); del.textContent = "Effacer";
+      del.addEventListener("click", function () {
+        var l = load(); l.splice(i, 1); save(l); render();
+      });
+      meta.appendChild(a); meta.appendChild(del);
+      var tx = document.createElement("div"); tx.className = "text"; tx.textContent = n.x;
+      li.appendChild(meta); li.appendChild(tx);
+      ul.appendChild(li);
+    });
+    $("store-note").textContent = store
+      ? "Les notes restent sur cet appareil, dans ce navigateur."
+      : "Dans cet aperçu, les notes restent le temps de la visite.";
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".chip"), function (c) {
+    c.addEventListener("click", function () {
+      tag = c.getAttribute("data-tag");
+      Array.prototype.forEach.call(document.querySelectorAll(".chip"), function (o) {
+        o.setAttribute("aria-pressed", o === c ? "true" : "false");
+      });
+    });
+  });
+  $("b-save").addEventListener("click", function () {
+    var v = $("note-text").value.trim();
+    if (!v) return;
+    var l = load(); l.unshift({ t: Date.now(), tag: tag, x: v }); save(l);
+    $("note-text").value = "";
+    render();
+  });
+  render();
+
+  show((location.hash || "").replace("#", "") || "accueil");
+})();
+if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
+</script>
+</body>
+</html>

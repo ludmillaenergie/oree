@@ -1,0 +1,16 @@
+{
+  "name": "Orée",
+  "short_name": "Orée",
+  "description": "Un moment pour respirer, tirer une carte, écouter ou déposer quelques mots.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#211D1A",
+  "theme_color": "#211D1A",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

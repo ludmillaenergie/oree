@@ -1060,21 +1060,8 @@ body {
     var alt = idx === 0 ? "Schéma : la tranche de la main, côté petit doigt." : "Schéma du visage et du haut du corps, avec le point à tapoter allumé : " + EFT_PTS[idx - 1].w + ".";
     return '<svg viewBox="0 0 200 220" role="img" aria-label="' + alt + '">' + inner + '</svg>';
   }
-  function eftPhrase(i) {
-    var f = EFT_FEEL[eftFeel], low = f.charAt(0).toLowerCase() + f.slice(1);
-    var tout = (f.indexOf("Cette") === 0 ? "Toute " : "Tout ") + low;
-    var L = [
-      f + ".",
-      tout + ".",
-      f + " dans mon corps.",
-      f + " que je ressens.",
-      "Je reconnais " + low + ".",
-      "Je laisse un peu de place à " + low + ".",
-      "Je peux relâcher un peu de " + low.replace(/^cette /, "cette ").replace(/^ce /, "ce ") + ".",
-      "Je me détends doucement."
-    ];
-    return L[i];
-  }
+  var EFT_SAY = ["Ce que je ressens, là.", "", "Je remarque ce qui se passe en moi.", "", "Je peux prendre mon temps.", "", "Je sens le contact de mes doigts.", "", ""];
+  function eftPhrase(i) { return EFT_SAY[i] || "En silence."; }
   function eftTock() {
     if (!soundOn) return;
     var ctx = getCtx(); if (!ctx) return;
@@ -1102,7 +1089,7 @@ body {
     $("b-eft-again").hidden = !fin;
     if (intro) {
       $("eft-title").textContent = "Tapoter le visage";
-      $("eft-text").textContent = "Huit petits points, un à un, avec deux doigts. À chaque point, répète une phrase dans ta tête ou à voix basse. Choisis ce que tu veux apaiser :";
+      $("eft-text").textContent = "Huit petits points, un à un, avec deux doigts. À certains points, tu peux dire une phrase, dans ta tête ou à voix basse. Aux autres, reste en silence. Choisis ce que tu veux apaiser :";
       var box = $("eft-chips"); box.innerHTML = "";
       EFT_FEEL.forEach(function (f, i) {
         var b = document.createElement("button");
@@ -1116,9 +1103,9 @@ body {
       $("b-eft-next").textContent = "Commencer";
     } else if (eftStep === 0) {
       $("eft-title").textContent = "Pour commencer";
-      $("eft-text").textContent = "Tapote doucement la tranche d'une main, côté petit doigt, avec deux doigts de l'autre main. Répète trois fois :";
+      $("eft-text").textContent = "Tapote doucement la tranche d'une main, côté petit doigt, avec deux doigts de l'autre main. Tu peux dire :";
       $("eft-fig").innerHTML = eftSvg(0);
-      $("eft-phrase").textContent = "«\u00a0Même si j'ai " + low + ", je m'accepte profondément et complètement.\u00a0»";
+      $("eft-phrase").textContent = "«\u00a0Je ressens " + low + " en ce moment. Je peux prendre quelques instants pour moi.\u00a0»";
       $("b-eft-next").textContent = "Continuer";
     } else if (!fin) {
       var pt = EFT_PTS[eftStep - 1];

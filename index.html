@@ -426,6 +426,12 @@ body {
 #sheet-eft .ici-body { gap: 12px; }
 #sheet-eft .tap-fig svg { width: min(46vw, 180px); }
 #sheet-eft .sheet-actions { flex-wrap: wrap; }
+.avr-opts { display: flex; flex-direction: column; gap: 14px; }
+.avr-opts div { border-left: 2px solid rgba(212,175,55,.45); padding: 2px 0 2px 14px; }
+.avr-opts b { display: block; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 20px; color: #E6C877; margin-bottom: 2px; }
+.avr-opts span { font-size: 15px; line-height: 1.45; color: #F5E9DA; }
+#sheet-avr .ici-body { gap: 14px; }
+#sheet-avr .sheet-actions { flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
 .ici-body > * { animation: iciIn .5s ease both; }
 @media (prefers-reduced-motion: reduce) { .ici-body > * { animation: none; } }
@@ -506,6 +512,10 @@ body {
       <span class="ici-name">Tapoter</span>
       <span class="ici-desc">Des tapotements guidés, avec quelques mots et des moments de silence.</span>
     </button>
+    <button class="ici-card" id="b-avr" type="button">
+      <span class="ici-name">Avant de répondre</span>
+      <span class="ici-desc">Une pause quand un message remue et que les doigts sont déjà sur le clavier.</span>
+    </button>
   </section>
 
   <div class="sheet" id="sheet-ret" role="dialog" aria-modal="true" aria-labelledby="ret-title" hidden>
@@ -548,6 +558,23 @@ body {
         <button class="btn" id="b-eft-next" type="button">Commencer</button>
         <button class="btn ghost" id="b-eft-again" type="button" hidden>Refaire un tour</button>
         <button class="btn ghost" id="b-eft-sound" type="button" aria-pressed="true">Son : oui</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-avr" role="dialog" aria-modal="true" aria-labelledby="avr-title" hidden>
+    <div class="sheet-in">
+      <button class="back" id="b-avr-close" type="button">← Fermer</button>
+      <div class="ici-body">
+        <h3 id="avr-title"></h3>
+        <p id="avr-text" aria-live="polite"></p>
+        <div class="avr-opts" id="avr-opts" hidden></div>
+        <p class="small" id="avr-note" hidden></p>
+      </div>
+      <div class="row sheet-actions">
+        <button class="btn" id="b-avr-next" type="button">Commencer</button>
+        <button class="btn ghost" id="b-avr-stay" type="button" hidden>Rester un instant</button>
+        <button class="btn ghost" id="b-avr-again" type="button" hidden>Refaire un tour</button>
       </div>
     </div>
   </div>
@@ -789,8 +816,8 @@ body {
     if (history.state && history.state.sheet) history.back(); else closeAllSheets();
   }
   $("b-close").addEventListener("click", requestClose);
-  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden; }
-  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); }
+  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden || !$("sheet-avr").hidden; }
+  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); if (!$("sheet-avr").hidden) closeAvr(); }
   window.addEventListener("popstate", closeAllSheets);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && anySheet()) requestClose(); });
 
@@ -1153,6 +1180,53 @@ body {
     try { localStorage.setItem("oree-son", soundOn ? "on" : "off"); } catch (e) {}
     paintEftSound(); paintSound();
   });
+
+  // Avant de répondre : six écrans
+  var AVR = [
+    { w: "Avant de répondre", t: "Un message qui remue donne vite envie de répondre tout de suite. Tu peux t’accorder deux minutes avant.", note: "Tu peux t’arrêter à tout moment. Si ce message te met en danger, parle à quelqu’un près de toi.", btn: "Commencer" },
+    { w: "Les mots exacts", t: "Relis le message, mot après mot. Juste ce qui est écrit, sans rien ajouter. Si tu veux, repère les mots qui t’ont fait réagir.", btn: "Continuer" },
+    { w: "Ce que j’ai compris", t: "Ce qui est écrit et ce que tu en as compris, ça fait parfois deux choses différentes. Remarque s’il y a un écart.", btn: "Continuer" },
+    { w: "Ici, maintenant", t: "Sens un appui, là où ton corps touche la chaise, le sol ou le lit. Tu peux laisser tes mains se poser. Prends une respiration un peu plus lente.", btn: "Continuer" },
+    { w: "Et maintenant", t: "Trois possibilités, tu prends celle qui te va.", btn: "Fermer", stay: true,
+      opts: [["Répondre maintenant", "Si c’est plus tranquille en toi, tu peux répondre. Une phrase courte suffit."], ["Attendre un peu", "Tu peux laisser le message là et revenir dans une heure, ou demain. Par exemple : « Je te réponds un peu plus tard. »"], ["Demander une précision", "Si un mot reste flou, tu peux demander. Par exemple : « Qu’est-ce que tu voulais dire par… ? »"]] },
+    { w: "", t: "Tu peux prendre encore un moment avant de retourner au message.", btn: "Fermer", again: true }
+  ];
+  var avrStep = 0, avrFocus = null;
+  function paintAvr() {
+    var st = AVR[avrStep];
+    $("avr-title").textContent = st.w; $("avr-title").hidden = !st.w;
+    $("avr-text").textContent = st.t;
+    var o = $("avr-opts"); o.innerHTML = ""; o.hidden = !st.opts;
+    if (st.opts) st.opts.forEach(function (x) { var d = document.createElement("div"), b = document.createElement("b"), sp = document.createElement("span"); b.textContent = x[0]; sp.textContent = x[1]; d.appendChild(b); d.appendChild(sp); o.appendChild(d); });
+    $("avr-note").textContent = st.note || ""; $("avr-note").hidden = !st.note;
+    $("b-avr-next").textContent = st.btn;
+    $("b-avr-stay").hidden = !st.stay;
+    $("b-avr-again").hidden = !st.again;
+    Array.prototype.forEach.call(document.querySelectorAll("#sheet-avr .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+    $("sheet-avr").scrollTop = 0;
+  }
+  function openAvr() {
+    avrStep = 0; paintAvr();
+    avrFocus = document.activeElement;
+    $("sheet-avr").hidden = false;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    $("b-avr-close").focus();
+  }
+  function closeAvr() {
+    $("sheet-avr").hidden = true;
+    document.body.style.overflow = "";
+    if (avrFocus && avrFocus.focus) { try { avrFocus.focus(); } catch (e) {} }
+  }
+  $("b-avr").addEventListener("click", openAvr);
+  $("b-avr-close").addEventListener("click", requestClose);
+  $("b-avr-next").addEventListener("click", function () {
+    var st = AVR[avrStep];
+    if (st.stay || st.again) { requestClose(); return; }
+    avrStep++; paintAvr();
+  });
+  $("b-avr-stay").addEventListener("click", function () { avrStep = 5; paintAvr(); });
+  $("b-avr-again").addEventListener("click", function () { avrStep = 0; paintAvr(); });
 
   // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)
   var audioCtx = null, noiseBuf = null, curSnd = null, soundOn = true;

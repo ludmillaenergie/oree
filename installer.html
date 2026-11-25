@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installer Orée</title>
+<meta name="description" content="Garder Orée sur l'écran d'accueil de ton téléphone, en quelques gestes.">
+<meta name="theme-color" content="#211D1A">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:title" content="Installer Orée">
+<meta property="og:description" content="Garder Orée sur l'écran d'accueil de ton téléphone, en quelques gestes.">
+<meta property="og:image" content="https://ludmillaenergie.github.io/oree/icons/share-2.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Raleway:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #211D1A; --surface: #30241F; --ink: #F5E9DA; --muted: #D9CBB8; --gold: #D4AF37; --display: "Cormorant Garamond", Georgia, serif; --body: "Raleway", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; min-height: 100vh; background: radial-gradient(120% 60% at 80% 0%, #3a2a1c 0%, var(--bg) 60%); color: var(--ink); font-family: var(--body); font-weight: 500; font-size: 17px; line-height: 1.55; }
+main { max-width: 520px; margin: 0 auto; padding: 28px 22px 48px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 44px; line-height: 1.05; margin: 8px 0 0; }
+h2 { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 28px; line-height: 1.1; margin: 0 0 8px; color: #E6C877; }
+p { margin: 0; color: var(--muted); }
+.qr { align-self: center; width: 210px; padding: 12px; border-radius: 18px; background: #F5E9DA; }
+.qr img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.cap { text-align: center; font-size: 15px; }
+.card { background: var(--surface); border: 1px solid var(--gold); border-radius: 18px; padding: 18px 18px 16px; }
+ol { margin: 0; padding-left: 22px; color: var(--ink); }
+ol li { margin: 6px 0; padding-left: 4px; }
+.note { font-size: 15px; }
+.btn { align-self: center; display: inline-block; padding: 14px 28px; border-radius: 999px; background: var(--gold); color: #211D1A; font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Installer Orée</h1>
+  <p>Orée s'ouvre depuis un lien, sans compte. Tu peux la garder sur l'écran d'accueil de ton téléphone, comme une appli.</p>
+
+  <div class="qr"><img src="icons/qr-oree.png" alt="QR code qui ouvre Orée" width="400" height="400"></div>
+  <p class="cap">Scanne ce code avec l'appareil photo de ton téléphone.</p>
+
+  <section class="card">
+    <h2>Sur iPhone</h2>
+    <ol>
+      <li>Ouvre le lien dans Safari.</li>
+      <li>Touche le bouton Partager, le carré avec une flèche vers le haut.</li>
+      <li>Choisis « Sur l'écran d'accueil ».</li>
+      <li>Touche « Ajouter ».</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Sur Android</h2>
+    <ol>
+      <li>Ouvre le lien dans Chrome.</li>
+      <li>Touche le menu, les trois points en haut à droite.</li>
+      <li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li>
+      <li>Confirme.</li>
+    </ol>
+  </section>
+
+  <p class="note">Selon ton téléphone, les mots peuvent changer un peu. Orée marche aussi sans l'installer, directement dans le navigateur. Tes notes restent sur ton téléphone.</p>
+
+  <a class="btn" href="./">Ouvrir Orée</a>
+</main>
+</body>
+</html>

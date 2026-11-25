@@ -372,6 +372,20 @@ body {
   padding: 18px 0 14px;
   background: linear-gradient(to bottom, rgba(33,29,26,0), #211D1A 45%);
 }
+/* Orée : bouton Urgence, rouge, en un geste */
+.urgence {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  width: 100%; min-height: 58px; padding: 8px 16px; cursor: pointer;
+  border: 1px solid #F0867B; border-radius: 999px; color: #FFF3EA;
+  background: radial-gradient(circle at 30% 25%, #E4493D 0%, #B3261E 55%, #8E1912 100%);
+  box-shadow: 0 0 0 4px rgba(200,40,30,.22), 0 6px 18px rgba(190,30,20,.38);
+  font-family: var(--body); transition: transform .08s ease, box-shadow .08s ease;
+}
+.urgence:active { transform: translateY(2px) scale(.99); box-shadow: 0 0 0 3px rgba(200,40,30,.28), 0 2px 8px rgba(190,30,20,.4); }
+.urgence:focus-visible { outline: 2px solid #FFF3EA; outline-offset: 3px; }
+.urgence .u-main { font-weight: 600; font-size: 18px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.2; }
+.urgence .u-sub { font-weight: 500; font-size: 13px; opacity: .92; line-height: 1.2; }
+#v-poser .urgence { margin: 2px 0; }
 </style>
 </head>
 <body>
@@ -414,8 +428,13 @@ body {
     <button class="back" data-go="accueil">← Retour</button>
     <h2>Poser</h2>
     <p class="lead">Choisis une respiration. Le cercle guide le rythme.</p>
+    <button class="urgence" id="b-urgence" type="button" aria-label="Urgence : respirer tout de suite">
+      <span class="u-main">Urgence</span>
+      <span class="u-sub">Respirer tout de suite</span>
+    </button>
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
     <p id="pick-desc"></p>
+    <p class="small" id="urg-note" hidden>Si ça ne passe pas, parle à quelqu'un près de toi ou appelle un service d'aide.</p>
     <p class="small" id="pick-warn" hidden>Si la tête tourne, revenir à une respiration naturelle. Chacun va à son rythme.</p>
     <div class="breath">
       <div class="orb-box">
@@ -547,6 +566,8 @@ body {
     { name: "Souffle alterné", desc: "Pour aller plus loin. Main droite devant le nez : le pouce ferme la narine droite, l'annulaire ferme la gauche. On inspire d'un côté, on change, on expire de l'autre. Si le nez est bouché, passer son tour.", cycles: 5, hold: false,
       phases: [{ l: "Inspire à gauche", ms: 4000, s: 1 }, { l: "Expire à droite", ms: 4000, s: .5 }, { l: "Inspire à droite", ms: 4000, s: 1 }, { l: "Expire à gauche", ms: 4000, s: .5 }] }
   ];
+  var URGENCE = { name: "Urgence", desc: "Rien d'autre à faire que souffler. Inspire par le nez, expire longuement par la bouche.", cycles: 6, hold: false, urgent: true,
+      phases: [{ l: "Inspire", ms: 4000, s: 1 }, { l: "Expire longuement", ms: 7000, s: .5 }] };
   var pat = PATTERNS[0];
   var timer = null, running = false;
   function setOrb(scale, ms) {
@@ -588,7 +609,7 @@ body {
     step();
   }
   $("b-start").addEventListener("click", startBreath);
-  function showDesc() { $("pick-desc").textContent = pat.desc; $("pick-warn").hidden = !pat.hold; }
+  function showDesc() { $("pick-desc").textContent = pat.desc; $("pick-warn").hidden = !pat.hold; $("urg-note").hidden = !pat.urgent; }
   (function buildPicks() {
     var picks = $("picks");
     PATTERNS.forEach(function (p, idx) {
@@ -605,6 +626,16 @@ body {
     });
     showDesc();
   })();
+
+  $("b-urgence").addEventListener("click", function () {
+    pat = URGENCE;
+    Array.prototype.forEach.call($("picks").children, function (o) { o.setAttribute("aria-pressed", "false"); });
+    stopBreath(true);
+    showDesc();
+    startBreath();
+    var o = document.querySelector("#v-poser .orb-box");
+    if (o && o.scrollIntoView) { try { o.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { o.scrollIntoView(); } }
+  });
 
   // Carte du jour : la même toute la journée
   function todayIndex() {

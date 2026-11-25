@@ -398,6 +398,34 @@ body {
 }
 .ici-card:hover { background: #3a2c25; }
 .ici-card:focus-visible { outline: 2px solid #D4AF37; outline-offset: 3px; }
+#b-nuit { background:     radial-gradient(2.7px 2.7px at 8% 24%, rgba(235,240,255,1), transparent 70%),
+    radial-gradient(1.9px 1.9px at 15% 70%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(3.0px 3.0px at 27% 36%, rgba(255,244,214,.9), transparent 70%),
+    radial-gradient(1.9px 1.9px at 38% 78%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(2.3px 2.3px at 49% 20%, rgba(235,240,255,1), transparent 70%),
+    radial-gradient(1.9px 1.9px at 58% 64%, rgba(255,244,214,1), transparent 70%),
+    radial-gradient(2.8px 2.8px at 69% 32%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(1.9px 1.9px at 78% 76%, rgba(235,240,255,1), transparent 70%),
+    radial-gradient(2.5px 2.5px at 88% 22%, rgba(255,244,214,1), transparent 70%),
+    radial-gradient(1.9px 1.9px at 94% 60%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(1.9px 1.9px at 4% 52%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(2.1px 2.1px at 63% 88%, rgba(235,240,255,.9), transparent 70%),
+    linear-gradient(160deg, #1B2A4D 0%, #101B38 100%); border-color: #34487A; }
+#b-nuit:hover { background:     radial-gradient(2.7px 2.7px at 8% 24%, rgba(235,240,255,1), transparent 70%),
+    radial-gradient(1.9px 1.9px at 15% 70%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(3.0px 3.0px at 27% 36%, rgba(255,244,214,.9), transparent 70%),
+    radial-gradient(1.9px 1.9px at 38% 78%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(2.3px 2.3px at 49% 20%, rgba(235,240,255,1), transparent 70%),
+    radial-gradient(1.9px 1.9px at 58% 64%, rgba(255,244,214,1), transparent 70%),
+    radial-gradient(2.8px 2.8px at 69% 32%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(1.9px 1.9px at 78% 76%, rgba(235,240,255,1), transparent 70%),
+    radial-gradient(2.5px 2.5px at 88% 22%, rgba(255,244,214,1), transparent 70%),
+    radial-gradient(1.9px 1.9px at 94% 60%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(1.9px 1.9px at 4% 52%, rgba(235,240,255,.9), transparent 70%),
+    radial-gradient(2.1px 2.1px at 63% 88%, rgba(235,240,255,.9), transparent 70%),
+    linear-gradient(160deg, #22345F 0%, #14224A 100%); }
+#b-nuit .ici-name { color: #E3E9F8; }
+#b-nuit .ici-desc { color: #B7C3E0; }
 .ici-name { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 30px; line-height: 1.1; color: #F5E9DA; }
 .ici-desc { font-family: var(--body); font-weight: 500; font-size: 15px; color: #D9CBB8; }
 .ici-body { margin: auto 0; display: flex; flex-direction: column; gap: 18px; }
@@ -436,20 +464,7 @@ body {
 #sheet-nuit .back { color: #8F7F69; }
 #sheet-nuit #nuit-text { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.35; color: #B9A88F; text-wrap: balance; text-align: center; margin: 0; }
 #sheet-nuit .sheet-actions { background: none; justify-content: center; }
-#sheet-nuit .btn { position: relative; overflow: hidden; background: linear-gradient(160deg, #1B2A4D 0%, #101B38 100%); color: #D3DCF0; border: 1px solid #34487A; box-shadow: none; }
-#sheet-nuit .btn::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(1.4px 1.4px at 12% 28%, rgba(235,240,255,.95), transparent 60%),
-    radial-gradient(1px 1px at 22% 72%, rgba(235,240,255,.7), transparent 60%),
-    radial-gradient(1.6px 1.6px at 34% 38%, rgba(255,244,214,.9), transparent 60%),
-    radial-gradient(1px 1px at 47% 80%, rgba(235,240,255,.6), transparent 60%),
-    radial-gradient(1.2px 1.2px at 58% 22%, rgba(235,240,255,.85), transparent 60%),
-    radial-gradient(1px 1px at 69% 66%, rgba(255,244,214,.75), transparent 60%),
-    radial-gradient(1.5px 1.5px at 80% 30%, rgba(235,240,255,.9), transparent 60%),
-    radial-gradient(1px 1px at 90% 74%, rgba(235,240,255,.65), transparent 60%),
-    radial-gradient(1px 1px at 6% 78%, rgba(235,240,255,.5), transparent 60%),
-    radial-gradient(1.1px 1.1px at 95% 18%, rgba(255,244,214,.7), transparent 60%); }
-#sheet-nuit .btn[aria-pressed="true"] { background: linear-gradient(160deg, #162244 0%, #0C1530 100%); }
+#sheet-nuit .btn { background: #2A2118; color: #C9B79C; border: 1px solid #4A3B2C; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) { #sheet-nuit .ici-body > * { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
 .ici-body > * { animation: iciIn .5s ease both; }

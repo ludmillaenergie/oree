@@ -1,4 +1,4 @@
-var CACHE = "oree-v41";
+var CACHE = "oree-v42";
 var FILES = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }));
@@ -13,6 +13,7 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
   var url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
   // Les audios (Range) passent directement par le réseau.
   if (e.request.headers.get("range") || url.pathname.indexOf("/audio/") !== -1) return;
   e.respondWith(

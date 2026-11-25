@@ -439,8 +439,8 @@ body {
 #ret-title { font-size: 46px; }
 #ret-text { font-size: 20px; line-height: 1.5; color: var(--ink); }
 .ret-ex { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 26px; line-height: 1.25; color: #E6C877; }
-.ret-sw { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
-.ret-sw button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(245,233,218,.35); }
+.ret-sw { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.ret-sw button { width: 38px; height: 38px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(245,233,218,.35); }
 .ret-sw button[aria-pressed="true"] { border-color: #F5E9DA; }
 .ret-sw button:focus-visible { outline: 2px solid #F5E9DA; outline-offset: 3px; }
 .ret-dots { display: flex; gap: 10px; margin-top: 8px; }
@@ -925,10 +925,7 @@ body {
       label: "Touche ce que tu entends, ou ce qui s'en approche.",
       after: "Reste un instant avec ce son.",
       groups: [
-        { g: "Chez soi", items: ["Le frigo", "Une horloge", "L'eau qui coule", "Des pas", "Une porte"] },
-        { g: "Au travail", items: ["Un clavier", "Une imprimante", "Des voix", "Un téléphone", "Un ventilateur"] },
-        { g: "Dehors", items: ["Une voiture", "Le vent", "Des oiseaux", "Une sirène au loin", "Des passants"] },
-        { g: "Aussi", items: ["Le silence", "Mon souffle", "Autre chose"] }
+        { g: "", items: ["Le frigo", "Une horloge", "L'eau qui coule", "Des pas", "Une porte", "Un clavier", "Une imprimante", "Des voix", "Un téléphone", "Un ventilateur", "Une voiture", "Le vent", "Des oiseaux", "Une sirène au loin", "Des passants", "Le silence", "Mon souffle", "Autre chose"] }
       ] },
     { w: "Toucher", t: "Pose la main sur quelque chose près de toi : un vêtement, une table, ta propre main. Remarque ce que tu sens.",
       label: "Touche les mots qui vont avec ce que tu ressens.",
@@ -938,7 +935,7 @@ body {
       ] },
     { w: "", t: "Reprends ce que tu faisais, ou reste ici encore un instant." }
   ];
-  var HUES = [["Ambre", "#D9953A"], ["Rouge", "#C4513F"], ["Vert", "#6E8B5B"], ["Bleu", "#5B7FA6"], ["Violet", "#8A6AA6"], ["Blanc", "#E8DCC8"]];
+  var HUES = [["Rouge", "#C4513F"], ["Corail", "#E07A5F"], ["Orange", "#E08A3C"], ["Ambre", "#D9953A"], ["Jaune", "#E3C04D"], ["Vert clair", "#A3B86C"], ["Vert", "#6E8B5B"], ["Vert profond", "#3F6B4F"], ["Turquoise", "#3FA7A0"], ["Bleu ciel", "#7FB2D6"], ["Bleu", "#5B7FA6"], ["Bleu nuit", "#34507A"], ["Violet", "#8A6AA6"], ["Lavande", "#B7A3D6"], ["Rose", "#E3A0B8"], ["Magenta", "#B5527F"], ["Brun", "#8A5A3C"], ["Gris", "#9A9A98"], ["Blanc", "#E8DCC8"], ["Noir", "#2A2523"]];
   var retStep = 0, retFocus = null, retHue = null, retPicked = {};
   function renderChoices() {
     var st = RET[retStep], box = $("ret-groups"), picked = retPicked[retStep] || [];

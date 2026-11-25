@@ -403,22 +403,11 @@ body {
 .ici-body { margin: auto 0; display: flex; flex-direction: column; gap: 18px; }
 .sheet [hidden] { display: none !important; }
 #ici-title { font-size: 46px; }
-#ici-clue { font-size: 19px; line-height: 1.5; color: var(--ink); }
 #ici-text { font-size: 20px; line-height: 1.5; color: var(--ink); }
-.pz-slots { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
-.pz-tiles { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
-.pz-slot, .pz-tile {
-  font-family: var(--display); font-weight: 600; font-size: 28px; line-height: 1; text-transform: uppercase;
-  border-radius: 10px; display: grid; place-items: center; padding: 0; cursor: pointer; color: #F5E9DA;
-}
-.pz-slot { flex: 1 1 0; max-width: 42px; aspect-ratio: 1 / 1.25; background: transparent; border: 1px dashed rgba(212,175,55,.55); }
-.pz-slot.filled { background: #30241F; border: 1px solid #D4AF37; }
-.pz-slot.hint { background: rgba(212,175,55,.2); border-color: #D4AF37; cursor: default; }
-.pz-slot.ok { background: #D4AF37; border-color: #D4AF37; color: #211D1A; cursor: default; }
-.pz-tile { width: 46px; height: 54px; background: #30241F; border: 1px solid #D4AF37; }
-.pz-tile:active:not(:disabled) { transform: translateY(2px); }
-.pz-tile:disabled { opacity: .25; cursor: default; }
-.pz-slot:focus-visible, .pz-tile:focus-visible { outline: 2px solid #F5E9DA; outline-offset: 2px; }
+.tap-box { display: flex; justify-content: center; gap: 56px; margin-top: 18px; }
+.tap-dot { width: 74px; height: 74px; border-radius: 50%; border: 1px solid rgba(212,175,55,.7); background: radial-gradient(circle at 38% 32%, rgba(194,138,63,.25), rgba(90,58,30,.12) 80%); transition: background .25s ease, box-shadow .25s ease, border-color .25s ease, transform .25s ease; }
+.tap-dot.on { background: radial-gradient(circle at 38% 32%, #E6C877, #C28A3F 80%); border-color: #E6C877; box-shadow: 0 0 34px rgba(230,170,70,.45); transform: scale(1.08); }
+@media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
 .ici-body > * { animation: iciIn .5s ease both; }
 @media (prefers-reduced-motion: reduce) { .ici-body > * { animation: none; } }
 @keyframes iciIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -471,7 +460,7 @@ body {
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
     <button class="ici-card" id="b-ici" type="button">
       <span class="ici-name">Revenir ici</span>
-      <span class="ici-desc">Un petit mot à retrouver, sans souffle et sans chrono.</span>
+      <span class="ici-desc">Un tapotage doux, un côté puis l'autre, sans chrono.</span>
     </button>
   </section>
 
@@ -480,15 +469,12 @@ body {
       <button class="back" id="b-ici-close" type="button">← Fermer</button>
       <div class="ici-body">
         <h3 id="ici-title">Revenir ici</h3>
-        <p id="ici-clue"></p>
-        <div class="pz-slots" id="pz-slots" role="group" aria-label="Le mot à composer"></div>
-        <div class="pz-tiles" id="pz-tiles" role="group" aria-label="Lettres à toucher"></div>
-        <p class="small" id="pz-msg" aria-live="polite" hidden></p>
-        <p id="ici-text" aria-live="polite" hidden>Lève les yeux de l’écran. Remarque un détail autour de toi. Tu peux rester ici encore un instant.</p>
+        <p id="ici-text" aria-live="polite"></p>
+        <div class="tap-box" id="tap-box" aria-hidden="true"><span class="tap-dot" id="tap-l"></span><span class="tap-dot" id="tap-r"></span></div>
       </div>
       <div class="row sheet-actions">
-        <button class="btn ghost" id="b-hint" type="button">Un coup de pouce</button>
-        <button class="btn" id="b-ici-end" type="button" hidden>Fermer</button>
+        <button class="btn" id="b-ici-next" type="button">Commencer</button>
+        <button class="btn ghost" id="b-tap-sound" type="button" aria-pressed="true">Son : oui</button>
       </div>
     </div>
   </div>
@@ -715,106 +701,58 @@ body {
   window.addEventListener("popstate", function () { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && (!$("sheet").hidden || !$("sheet-ici").hidden)) requestClose(); });
 
-  // Revenir ici : un petit mot à retrouver, sans chrono ni score
-  var PUZZLES = [
-    { word: "PRÉSENCE", clue: "Quand ton attention revient à ce qui se passe autour de toi." }
+  // Revenir ici : un tapotage doux, un côté puis l'autre, au rythme de deux cercles
+  var TAP = [
+    { w: "Poitrine", t: "Croise tes mains sur ta poitrine. Tapote doucement, une main puis l'autre, au rythme des cercles." },
+    { w: "Épaules", t: "Croise les bras, mains sur les épaules. Même rythme, à ta façon." },
+    { w: "Cuisses", t: "Pose les mains sur tes cuisses. Tapote un côté, puis l'autre." }
   ];
-  var pz = null, iciFocus = null;
-  function pzShuffle(chars, word) {
-    var idx = chars.map(function (c, i) { return i; }), tries = 0, out;
-    do {
-      for (var i = idx.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
-      out = idx.map(function (k) { return chars[k]; }).join("");
-      tries++;
-    } while (out === word && tries < 20);
-    return idx.slice();
+  var tapStep = -1, tapTimer = null, tapSide = 0, iciFocus = null;
+  function paintTapSound() { var b = $("b-tap-sound"); b.textContent = soundOn ? "Son : oui" : "Son : non"; b.setAttribute("aria-pressed", soundOn ? "true" : "false"); }
+  function tapTick(side) {
+    $("tap-l").className = "tap-dot" + (side === 0 ? " on" : "");
+    $("tap-r").className = "tap-dot" + (side === 1 ? " on" : "");
+    if (!soundOn) return;
+    var ctx = getCtx(); if (!ctx) return;
+    try {
+      var t0 = ctx.currentTime + .02, o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), g2 = ctx.createGain(), out = g;
+      o.type = "sine"; o.frequency.value = 330; o2.type = "sine"; o2.frequency.value = 660; g2.gain.value = .25;
+      g.gain.setValueAtTime(.0001, t0); g.gain.linearRampToValueAtTime(.22, t0 + .006); g.gain.exponentialRampToValueAtTime(.0001, t0 + .3);
+      o.connect(g); o2.connect(g2); g2.connect(g);
+      if (ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = side === 0 ? -.8 : .8; g.connect(pn); pn.connect(ctx.destination); }
+      else g.connect(ctx.destination);
+      o.start(t0); o2.start(t0); o.stop(t0 + .32); o2.stop(t0 + .32);
+    } catch (e) {}
   }
-  function pzNew(n) {
-    var P = PUZZLES[n % PUZZLES.length], chars = P.word.split(""), order = pzShuffle(chars, P.word);
-    pz = { word: P.word, clue: P.clue, done: false,
-      tiles: order.map(function (k, id) { return { id: id, ch: chars[k] }; }),
-      slots: chars.map(function () { return null; }),
-      hinted: chars.map(function () { return false; }) };
+  function tapStart() {
+    clearInterval(tapTimer); tapSide = 0; tapTick(0);
+    tapTimer = setInterval(function () { tapSide = 1 - tapSide; tapTick(tapSide); }, 1200);
   }
-  function pzPlacedIds() { return pz.slots.filter(function (v) { return v !== null; }); }
-  function pzRender() {
-    var slots = $("pz-slots"), tiles = $("pz-tiles"), placed = pzPlacedIds();
-    slots.innerHTML = ""; tiles.innerHTML = "";
-    pz.slots.forEach(function (tid, i) {
-      var b = document.createElement("button");
-      b.type = "button";
-      if (tid === null) {
-        b.className = "pz-slot"; b.setAttribute("aria-label", "Case " + (i + 1) + ", vide");
-      } else {
-        var ch = pz.tiles[tid].ch;
-        b.className = "pz-slot filled" + (pz.hinted[i] ? " hint" : "") + (pz.done ? " ok" : "");
-        b.textContent = ch;
-        b.setAttribute("aria-label", "Case " + (i + 1) + " : " + ch + (pz.hinted[i] || pz.done ? "" : ", toucher pour retirer"));
-        if (pz.hinted[i] || pz.done) b.disabled = true;
-        else b.addEventListener("click", function () { pz.slots[i] = null; $("pz-msg").hidden = true; pzRender(); });
-      }
-      slots.appendChild(b);
-    });
-    pz.tiles.forEach(function (t) {
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "pz-tile"; b.textContent = t.ch;
-      b.setAttribute("aria-label", "Lettre " + t.ch);
-      if (placed.indexOf(t.id) >= 0) b.disabled = true;
-      else b.addEventListener("click", function () { pzPlace(t.id); });
-      tiles.appendChild(b);
-    });
+  function tapStop() {
+    clearInterval(tapTimer); tapTimer = null;
+    $("tap-l").className = "tap-dot"; $("tap-r").className = "tap-dot";
   }
-  function pzWord() { return pz.slots.map(function (tid) { return tid === null ? "" : pz.tiles[tid].ch; }).join(""); }
-  function pzCheck() {
-    if (pz.slots.indexOf(null) >= 0) { $("pz-msg").hidden = true; return; }
-    if (pzWord() === pz.word) { pzWin(); }
-    else { $("pz-msg").textContent = "Pas tout à fait. Touche une case pour retirer une lettre."; $("pz-msg").hidden = false; }
-  }
-  function pzPlace(id) {
-    var i = pz.slots.indexOf(null);
-    if (i < 0) return;
-    pz.slots[i] = id; $("pz-msg").hidden = true; pzRender(); pzCheck();
-  }
-  function pzHint() {
-    if (pz.done) return;
-    var chars = pz.word.split(""), i;
-    for (i = 0; i < chars.length; i++) {
-      var cur = pz.slots[i];
-      if (!pz.hinted[i] && (cur === null || pz.tiles[cur].ch !== chars[i])) break;
+  function paintIci() {
+    var intro = tapStep < 0, fin = tapStep >= TAP.length;
+    $("ici-title").hidden = fin;
+    $("tap-box").hidden = fin;
+    $("b-tap-sound").hidden = fin;
+    if (intro) {
+      $("ici-title").textContent = "Revenir ici";
+      $("ici-text").textContent = "Un tapotage doux, un côté puis l'autre. Tu peux le faire assis ou debout, les yeux ouverts ou fermés. Les cercles donnent le rythme.";
+      $("b-ici-next").textContent = "Commencer";
+    } else if (fin) {
+      $("ici-text").textContent = "Tu peux rester ici encore un instant.";
+      $("b-ici-next").textContent = "Fermer";
+    } else {
+      $("ici-title").textContent = TAP[tapStep].w;
+      $("ici-text").textContent = TAP[tapStep].t;
+      $("b-ici-next").textContent = "Continuer";
     }
-    if (i >= chars.length) return;
-    // une lettre juste qui n'est ni déjà bien placée par un coup de pouce, ni posée sur sa bonne case
-    var pick = null;
-    pz.tiles.forEach(function (t) {
-      if (pick !== null || t.ch !== chars[i]) return;
-      var at = pz.slots.indexOf(t.id);
-      if (at >= 0 && (pz.hinted[at] || chars[at] === t.ch)) return;
-      pick = t.id;
-    });
-    if (pick === null) {
-      // toutes les bonnes lettres sont déjà bien posées ailleurs : on les verrouille à leur place
-      for (var k = 0; k < chars.length; k++) if (pz.slots[k] !== null && pz.tiles[pz.slots[k]].ch === chars[k]) pz.hinted[k] = true;
-      pzRender(); pzCheck(); return;
-    }
-    var from = pz.slots.indexOf(pick);
-    if (from >= 0) pz.slots[from] = null;
-    pz.slots[i] = pick; pz.hinted[i] = true;
-    $("pz-msg").hidden = true; pzRender(); pzCheck();
+    Array.prototype.forEach.call(document.querySelectorAll("#sheet-ici .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
   }
-  function pzWin() {
-    pz.done = true; pzRender();
-    $("pz-tiles").hidden = true; $("pz-msg").hidden = true; $("b-hint").hidden = true;
-    $("ici-text").hidden = false; $("b-ici-end").hidden = false;
-    Array.prototype.forEach.call(document.querySelectorAll("#sheet-ici .ici-body > *"), function (el) { if (!el.hidden) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; } });
-    $("b-ici-end").focus();
-  }
-  var pzCount = 0;
   function openIci() {
-    pzNew(pzCount++);
-    $("ici-clue").textContent = pz.clue;
-    $("pz-tiles").hidden = false; $("pz-msg").hidden = true; $("ici-text").hidden = true;
-    $("b-hint").hidden = false; $("b-ici-end").hidden = true;
-    pzRender();
+    tapStep = -1; tapStop(); paintTapSound(); paintIci();
     iciFocus = document.activeElement;
     $("sheet-ici").hidden = false; $("sheet-ici").scrollTop = 0;
     document.body.style.overflow = "hidden";
@@ -822,14 +760,25 @@ body {
     $("b-ici-close").focus();
   }
   function closeIci() {
+    tapStop();
     $("sheet-ici").hidden = true;
     if ($("sheet").hidden) document.body.style.overflow = "";
     if (iciFocus && iciFocus.focus) { try { iciFocus.focus(); } catch (e) {} }
   }
   $("b-ici").addEventListener("click", openIci);
   $("b-ici-close").addEventListener("click", requestClose);
-  $("b-ici-end").addEventListener("click", requestClose);
-  $("b-hint").addEventListener("click", pzHint);
+  $("b-ici-next").addEventListener("click", function () {
+    if (tapStep >= TAP.length) { requestClose(); return; }
+    tapStep++;
+    if (tapStep === 0) tapStart();
+    if (tapStep >= TAP.length) tapStop();
+    paintIci();
+  });
+  $("b-tap-sound").addEventListener("click", function () {
+    soundOn = !soundOn;
+    try { localStorage.setItem("oree-son", soundOn ? "on" : "off"); } catch (e) {}
+    paintTapSound(); paintSound();
+  });
 
   // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)
   var audioCtx = null, noiseBuf = null, curSnd = null, soundOn = true;

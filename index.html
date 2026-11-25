@@ -416,7 +416,7 @@ body {
   background: radial-gradient(circle at 50% 72%, var(--c, transparent) 0%, rgba(0,0,0,0) 62%); }
 .ret-glow.on { opacity: .5; }
 #sheet-ret .sheet-in { position: relative; z-index: 1; }
-#sheet-ret .sheet-actions { background: none; }
+#sheet-ret .sheet-actions { background: linear-gradient(to bottom, rgba(33,29,26,0), rgba(33,29,26,.94) 48%); }
 #ret-title { font-size: 46px; }
 #ret-text { font-size: 20px; line-height: 1.5; color: var(--ink); }
 .ret-ex { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 26px; line-height: 1.25; color: #E6C877; }
@@ -427,6 +427,10 @@ body {
 .ret-dots { display: flex; gap: 10px; margin-top: 8px; }
 .ret-dots span { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(212,175,55,.6); }
 .ret-dots span.on { background: #D4AF37; border-color: #D4AF37; }
+.ret-choices { display: flex; flex-direction: column; gap: 12px; }
+.ret-group { display: flex; flex-direction: column; gap: 8px; }
+.ret-group h4 { margin: 6px 0 0; font-family: var(--body); font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #D9CBB8; }
+.ret-after { font-family: var(--display); font-style: italic; font-weight: 600; font-size: 22px; line-height: 1.3; color: #E6C877; margin: 0; }
 @media (prefers-reduced-motion: reduce) { .ret-glow { transition: none; } }
 </style>
 </head>
@@ -477,7 +481,7 @@ body {
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
     <button class="ici-card" id="b-ret" type="button">
       <span class="ici-name">Revenir ici</span>
-      <span class="ici-desc">Quand la tête part dans la suite : le remarquer, puis regarder autour de soi.</span>
+      <span class="ici-desc">Quand la tête part dans la suite : le remarquer, puis revenir par les sens.</span>
     </button>
     <button class="ici-card" id="b-ici" type="button">
       <span class="ici-name">Tapoter</span>
@@ -497,7 +501,12 @@ body {
           <p class="small">Si tu veux, touche la teinte la plus proche de ce que tu vois.</p>
           <div class="ret-sw" id="ret-sw" role="group" aria-label="Teintes"></div>
         </div>
-        <div class="ret-dots" id="ret-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="ret-choices" id="ret-choices" hidden>
+          <p class="small" id="ret-choices-label"></p>
+          <div id="ret-groups"></div>
+          <p class="ret-after" id="ret-after" hidden></p>
+        </div>
+        <div class="ret-dots" id="ret-dots" aria-hidden="true"></div>
       </div>
       <div class="row sheet-actions">
         <button class="btn" id="b-ret-next" type="button">Continuer</button>
@@ -823,25 +832,71 @@ body {
     paintTapSound(); paintSound();
   });
 
-  // Revenir ici : remarquer, regarder autour de soi, reprendre la main
+  // Revenir ici : remarquer, regarder, écouter, toucher, reprendre la main
   var RET = [
     { w: "Remarquer", t: "Quand ta tête part dans la suite, tu peux juste le remarquer.", ex: "« Je suis en train d'imaginer la suite. »" },
     { w: "Regarder", t: "Regarde près de toi. Choisis un objet et remarque un détail que tu n'avais jamais vraiment regardé.", hue: true },
+    { w: "Écouter", t: "Prends un instant pour écouter autour de toi. Un son tout proche, puis un son plus lointain.",
+      label: "Touche ce que tu entends, ou ce qui s'en approche.",
+      after: "Reste un instant avec ce son.",
+      groups: [
+        { g: "Chez soi", items: ["Le frigo", "Une horloge", "L'eau qui coule", "Des pas", "Une porte"] },
+        { g: "Au travail", items: ["Un clavier", "Une imprimante", "Des voix", "Un téléphone", "Un ventilateur"] },
+        { g: "Dehors", items: ["Une voiture", "Le vent", "Des oiseaux", "Une sirène au loin", "Des passants"] },
+        { g: "Aussi", items: ["Le silence", "Mon souffle", "Autre chose"] }
+      ] },
+    { w: "Toucher", t: "Pose la main sur quelque chose près de toi : un vêtement, une table, ta propre main. Remarque ce que tu sens.",
+      label: "Touche les mots qui vont avec ce que tu ressens.",
+      after: "Reste un instant avec cette sensation.",
+      groups: [
+        { g: "", items: ["Doux", "Lisse", "Rugueux", "Chaud", "Froid", "Tiède", "Sec", "Humide", "Dur", "Mou", "Léger", "Lourd"] }
+      ] },
     { w: "", t: "Reprends ce que tu faisais, ou reste ici encore un instant." }
   ];
   var HUES = [["Ambre", "#D9953A"], ["Rouge", "#C4513F"], ["Vert", "#6E8B5B"], ["Bleu", "#5B7FA6"], ["Violet", "#8A6AA6"], ["Blanc", "#E8DCC8"]];
-  var retStep = 0, retFocus = null, retHue = null;
+  var retStep = 0, retFocus = null, retHue = null, retPicked = {};
+  function renderChoices() {
+    var st = RET[retStep], box = $("ret-groups"), picked = retPicked[retStep] || [];
+    box.innerHTML = "";
+    if (!st.groups) return;
+    st.groups.forEach(function (gr) {
+      var wrap = document.createElement("div"); wrap.className = "ret-group";
+      if (gr.g) { var h = document.createElement("h4"); h.textContent = gr.g; wrap.appendChild(h); }
+      var row = document.createElement("div"); row.className = "chips";
+      gr.items.forEach(function (it) {
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "chip"; b.textContent = it;
+        b.setAttribute("aria-pressed", picked.indexOf(it) >= 0 ? "true" : "false");
+        b.addEventListener("click", function () {
+          var arr = retPicked[retStep] || (retPicked[retStep] = []), k = arr.indexOf(it);
+          if (k >= 0) arr.splice(k, 1); else arr.push(it);
+          b.setAttribute("aria-pressed", k >= 0 ? "false" : "true");
+          $("ret-after").hidden = arr.length === 0;
+        });
+        row.appendChild(b);
+      });
+      wrap.appendChild(row); box.appendChild(wrap);
+    });
+    $("ret-after").textContent = st.after || "";
+    $("ret-after").hidden = picked.length === 0;
+  }
   function paintRet() {
     var st = RET[retStep], last = retStep === RET.length - 1;
     $("ret-title").textContent = st.w; $("ret-title").hidden = !st.w;
     $("ret-text").textContent = st.t;
     $("ret-ex").textContent = st.ex || ""; $("ret-ex").hidden = !st.ex;
     $("ret-hue").hidden = !st.hue;
+    $("ret-choices").hidden = !st.groups;
+    $("ret-choices-label").textContent = st.label || "";
+    renderChoices();
     $("b-ret-next").textContent = last ? "Fermer" : "Continuer";
-    Array.prototype.forEach.call($("ret-dots").children, function (d, i) { d.className = i <= retStep ? "on" : ""; });
-    $("ret-dots").hidden = last;
+    var dots = $("ret-dots");
+    if (dots.children.length !== RET.length - 1) { dots.innerHTML = ""; for (var d = 0; d < RET.length - 1; d++) dots.appendChild(document.createElement("span")); }
+    Array.prototype.forEach.call(dots.children, function (el, i) { el.className = i <= retStep ? "on" : ""; });
+    dots.hidden = last;
     if (!st.hue || last) setHue(null);
     Array.prototype.forEach.call(document.querySelectorAll("#sheet-ret .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+    $("sheet-ret").scrollTop = 0;
   }
   function setHue(h) {
     retHue = h;
@@ -859,7 +914,7 @@ body {
     });
   })();
   function openRet() {
-    retStep = 0; setHue(null); paintRet();
+    retStep = 0; retPicked = {}; setHue(null); paintRet();
     retFocus = document.activeElement;
     $("sheet-ret").hidden = false; $("sheet-ret").scrollTop = 0;
     document.body.style.overflow = "hidden";

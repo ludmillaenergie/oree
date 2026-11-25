@@ -1060,8 +1060,16 @@ body {
     var alt = idx === 0 ? "Schéma : la tranche de la main, côté petit doigt." : "Schéma du visage et du haut du corps, avec le point à tapoter allumé : " + EFT_PTS[idx - 1].w + ".";
     return '<svg viewBox="0 0 200 220" role="img" aria-label="' + alt + '">' + inner + '</svg>';
   }
-  var EFT_SAY = ["Ce que je ressens, là.", "", "Je remarque ce qui se passe en moi.", "", "Je peux prendre mon temps.", "", "Je sens le contact de mes doigts.", "", ""];
-  function eftPhrase(i) { return EFT_SAY[i] || "En silence."; }
+  // Pour chaque ressenti : [départ (tranche de la main), sommet, coin de l'œil, sous le nez, clavicule]. Les autres points restent en silence.
+  var EFT_TXT = [
+    ["Je sens que ça serre quelque part. Je prends un instant pour remarquer où.", "Cette tension, là où je la sens.", "Je remarque l'endroit où ça serre.", "Je peux laisser mes épaules comme elles sont.", "Je sens le contact de mes doigts."],
+    ["Je ressens ce stress en ce moment. Je peux prendre quelques instants pour moi.", "Ce que je ressens, là.", "Je remarque ce qui se passe en moi.", "Je peux prendre mon temps.", "Je sens le contact de mes doigts."],
+    ["Ma tête est déjà en train d'imaginer la suite. Je peux revenir un instant à ce qui se passe ici.", "Cette inquiétude qui revient.", "Je remarque que j'imagine la suite.", "Je peux laisser cette question ouverte un instant.", "Je sens un point d'appui, là où je suis."],
+    ["Je sens la fatigue. Je peux prendre ce moment, même s'il reste des choses à faire.", "Cette fatigue, là, maintenant.", "Je sens où mon corps a besoin d'appui.", "Pour l'instant, je peux rester là.", "Je sens ce qui me porte."],
+    ["Quelque chose me remue. Je peux prendre un instant pour sentir ce qui est là.", "Cette émotion, même si je ne sais pas encore la nommer.", "Je remarque comment ça se manifeste dans mon corps.", "Je peux prendre mon temps avec ce que je ressens.", "Je reviens au contact de mes doigts."]
+  ];
+  var EFT_SLOT = { 1: 1, 3: 2, 5: 3, 7: 4 };
+  function eftPhrase(i) { var k = EFT_SLOT[i]; return k ? EFT_TXT[eftFeel][k] : "En silence."; }
   function eftTock() {
     if (!soundOn) return;
     var ctx = getCtx(); if (!ctx) return;
@@ -1105,7 +1113,7 @@ body {
       $("eft-title").textContent = "Pour commencer";
       $("eft-text").textContent = "Tapote doucement la tranche d'une main, côté petit doigt, avec deux doigts de l'autre main. Tu peux dire :";
       $("eft-fig").innerHTML = eftSvg(0);
-      $("eft-phrase").textContent = "«\u00a0Je ressens " + low + " en ce moment. Je peux prendre quelques instants pour moi.\u00a0»";
+      $("eft-phrase").textContent = "«\u00a0" + EFT_TXT[eftFeel][0] + "\u00a0»";
       $("b-eft-next").textContent = "Continuer";
     } else if (!fin) {
       var pt = EFT_PTS[eftStep - 1];

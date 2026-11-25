@@ -502,12 +502,8 @@ body {
       <span class="ici-name">Revenir ici</span>
       <span class="ici-desc">Quand la tête part dans la suite : le remarquer, puis revenir par les sens.</span>
     </button>
-    <button class="ici-card" id="b-ici" type="button">
-      <span class="ici-name">Tapoter</span>
-      <span class="ici-desc">Un tapotage doux, un côté puis l'autre, au rythme de deux cercles.</span>
-    </button>
     <button class="ici-card" id="b-eft" type="button">
-      <span class="ici-name">Tapoter le visage</span>
+      <span class="ici-name">Tapoter</span>
       <span class="ici-desc">Huit points, un à un, avec une phrase à répéter.</span>
     </button>
   </section>
@@ -907,7 +903,6 @@ body {
     if ($("sheet").hidden) document.body.style.overflow = "";
     if (iciFocus && iciFocus.focus) { try { iciFocus.focus(); } catch (e) {} }
   }
-  $("b-ici").addEventListener("click", openIci);
   $("b-ici-close").addEventListener("click", requestClose);
   $("b-ici-next").addEventListener("click", function () {
     if (tapStep >= TAP.length) { requestClose(); return; }
@@ -1096,7 +1091,7 @@ body {
     $("b-eft-sound").hidden = fin;
     $("b-eft-again").hidden = !fin;
     if (intro) {
-      $("eft-title").textContent = "Tapoter le visage";
+      $("eft-title").textContent = "Tapoter";
       $("eft-text").textContent = "Huit petits points, un à un, avec deux doigts. À certains points, tu peux dire une phrase, dans ta tête ou à voix basse. Aux autres, reste en silence. Choisis ce que tu veux apaiser :";
       var box = $("eft-chips"); box.innerHTML = "";
       EFT_FEEL.forEach(function (f, i) {

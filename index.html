@@ -473,6 +473,12 @@ body {
 #sheet-ens { background: radial-gradient(540px 440px at 108% -6%, rgba(184,121,56,.78) 0%, rgba(184,121,56,.34) 32%, rgba(45,33,28,0) 100%), #2D211C; }
 #sheet-ens .ici-body { gap: 14px; }
 #sheet-ens .sheet-actions { flex-wrap: wrap; gap: 10px; }
+#sheet-lum { background: radial-gradient(520px 420px at 100% -6%, rgba(212,175,55,.42) 0%, rgba(212,175,55,.16) 34%, rgba(33,29,26,0) 100%), #211D1A; }
+#sheet-lum .ici-body { gap: 14px; }
+#sheet-lum .sheet-actions { flex-wrap: wrap; gap: 10px; }
+.lum-intro { display: flex; flex-direction: column; gap: 14px; }
+.lum-intro[hidden] { display: none; }
+#lum-text { font-size: 19px; line-height: 1.5; color: #F5E9DA; }
 .ens-cards { display: flex; flex-direction: column; gap: 12px; }
 .ens-card { flex-direction: row !important; align-items: center !important; gap: 14px !important; margin-top: 0 !important; background: rgba(245,233,218,.07) !important; }
 .ens-card svg { flex: 0 0 64px; width: 64px; height: 64px; }
@@ -645,6 +651,10 @@ body {
       <span class="u-sub">Respirer tout de suite</span>
     </button>
     <div class="chips" id="picks" role="group" aria-label="Choix de la respiration"></div>
+    <button class="ici-card" id="b-lum" type="button">
+      <span class="ici-name">Le souffle et la lumière</span>
+      <span class="ici-desc">Une respiration guidée par une lumière qui monte et redescend.</span>
+    </button>
     <button class="ici-card" id="b-ens" type="button">
       <span class="ici-name">Souffler ensemble</span>
       <span class="ici-desc">Quelques respirations à partager avec un enfant.</span>
@@ -749,6 +759,43 @@ body {
         <button class="btn" id="b-ens-next" type="button">Commencer</button>
         <button class="btn" id="b-ens-go" type="button" hidden>Continuer</button>
         <button class="btn ghost" id="b-ens-other" type="button" hidden>Un autre jeu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-lum" role="dialog" aria-modal="true" aria-labelledby="lum-title" hidden>
+    <div class="sheet-in">
+      <button class="back" id="b-lum-close" type="button">← Fermer</button>
+      <div class="ici-body">
+        <h3 id="lum-title">Le souffle et la lumière</h3>
+        <div id="lum-intro" class="lum-intro">
+          <p id="lum-text">Si tu en as envie, imagine une lumière qui remonte le long de ton dos, puis redescend vers ton ventre. Tu peux aussi simplement suivre le mouvement à l’écran.</p>
+          <p class="small">Tu inspires 4 secondes, tu gardes l’air 2 secondes en haut, puis tu expires 6 secondes. Cinq tours, l’un après l’autre.</p>
+          <p class="small">Sept points sont posés sur la ligne, de bas en haut : la racine en rouge, le sacré en orange, le plexus solaire en jaune, le cœur en vert, la gorge en bleu, le troisième œil en indigo et la couronne en violet. La lumière prend leur couleur en passant. Ils restent allumés pendant la montée et s’éteignent un à un à la descente.</p>
+          <p class="small">Si la tête tourne, reviens à une respiration naturelle.</p>
+        </div>
+        <div class="ens-stage" id="lum-stage" hidden>
+          <svg id="lum-art" viewBox="0 0 300 300" role="img" aria-hidden="true">
+            <defs>
+              <radialGradient id="lum-glow"><stop offset="0" stop-color="#FFF1C4" stop-opacity="1"/><stop offset=".35" stop-color="#F0CF6A" stop-opacity=".62"/><stop offset="1" stop-color="#F0CF6A" stop-opacity="0"/></radialGradient>
+              <radialGradient id="lum-head"><stop offset="0" stop-color="#A878D6" stop-opacity=".8"/><stop offset="1" stop-color="#A878D6" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle id="lum-headglow" cx="150" cy="52" r="46" fill="url(#lum-head)" opacity="0"/>
+            <circle cx="150" cy="52" r="26" fill="none" stroke="#F5E9DA" stroke-opacity=".3" stroke-width="2"/>
+            <path id="lum-spine" d="M150 262 C 134 220 166 180 150 146 C 134 110 166 70 150 34" fill="none" stroke="#F5E9DA" stroke-opacity=".22" stroke-width="3" stroke-linecap="round"/>
+            <path id="lum-trail" d="M150 262 C 134 220 166 180 150 146 C 134 110 166 70 150 34" fill="none" stroke="#D4AF37" stroke-opacity=".8" stroke-width="4" stroke-linecap="round"/>
+            <g id="lum-chakras"></g>
+            <g id="lum-light"><circle r="36" fill="url(#lum-glow)"/><circle id="lum-core" r="6.5" fill="#FFF6D8"/></g>
+          </svg>
+          <p class="ens-cap" id="lum-cap" aria-live="polite"></p>
+        </div>
+      </div>
+      <audio id="lum-in" src="audio/lum-inspire.mp3" preload="auto"></audio>
+      <audio id="lum-out" src="audio/lum-expire.mp3" preload="auto"></audio>
+      <div class="row sheet-actions">
+        <button class="btn" id="b-lum-go" type="button">Commencer</button>
+        <button class="btn" id="b-lum-again" type="button" hidden>Recommencer</button>
+        <button class="btn ghost" id="b-lum-end" type="button" hidden>Fermer</button>
       </div>
     </div>
   </div>
@@ -1019,8 +1066,8 @@ body {
     if (history.state && history.state.sheet) history.back(); else closeAllSheets();
   }
   $("b-close").addEventListener("click", requestClose);
-  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden || !$("sheet-avr").hidden || !$("sheet-ens").hidden || !$("sheet-nuit").hidden; }
-  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); if (!$("sheet-avr").hidden) closeAvr(); if (!$("sheet-ens").hidden) closeEns(); if (!$("sheet-nuit").hidden) closeNuit(); }
+  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden || !$("sheet-avr").hidden || !$("sheet-ens").hidden || !$("sheet-lum").hidden || !$("sheet-nuit").hidden; }
+  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); if (!$("sheet-avr").hidden) closeAvr(); if (!$("sheet-ens").hidden) closeEns(); if (!$("sheet-lum").hidden) closeLum(); if (!$("sheet-nuit").hidden) closeNuit(); }
   window.addEventListener("popstate", closeAllSheets);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && anySheet()) requestClose(); });
 
@@ -1632,6 +1679,136 @@ body {
   });
   $("b-ens-go").addEventListener("click", function () { ensStep = 3; ensGame = null; paintEns(); });
   $("b-ens-other").addEventListener("click", function () { ensGame = null; ensStep = 2; paintEns(); });
+
+  // Le souffle et la lumière : cinq tours, 4 s pour inspirer, 2 s en haut, 6 s pour expirer
+  var lumFocus = null, lumRaf = 0, lumRun = false;
+  var LUM_END = "Laisse ton souffle reprendre son rythme. Tu peux rester là un instant.";
+  function lumSound(id, vol) {
+    var a = $(id); if (!a) return;
+    try { if (vol === null) { a.pause(); a.currentTime = 0; return; } a.currentTime = 0; a.volume = vol; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+  }
+  function lumStop() { if (lumRaf) { cancelAnimationFrame(lumRaf); lumRaf = 0; } lumRun = false; lumSound("lum-in", null); lumSound("lum-out", null); }
+  function lumShow(state) {
+    var intro = state === "intro", run = state === "run", end = state === "end";
+    $("lum-title").hidden = !intro;
+    $("lum-intro").hidden = !intro;
+    $("lum-stage").hidden = intro;
+    $("b-lum-go").hidden = !intro;
+    $("b-lum-again").hidden = !end;
+    $("b-lum-end").hidden = !end;
+    $("b-lum-go").parentNode.style.visibility = run ? "hidden" : "";
+    $("sheet-lum").scrollTop = 0;
+  }
+  var LUM_CH = [
+    { y: 258, c: "#E0533F" }, { y: 222, c: "#EE8B3A" }, { y: 186, c: "#EBC53C" }, { y: 146, c: "#5DB86B" },
+    { y: 104, c: "#4FA6DC" }, { y: 62, c: "#6E72E6" }, { y: 36, c: "#A878D6" }
+  ];
+  var LUM_GOLD = "#F0CF6A", NS = "http://www.w3.org/2000/svg";
+  function hexRgb(h) { return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; }
+  function mixHex(a, b, t) {
+    var x = hexRgb(a), y = hexRgb(b), o = [];
+    for (var i = 0; i < 3; i++) o.push(Math.round(x[i] + (y[i] - x[i]) * t));
+    return "rgb(" + o.join(",") + ")";
+  }
+  function lumChakras(len) {
+    var sp = $("lum-spine"), g = $("lum-chakras"); g.innerHTML = "";
+    LUM_CH.forEach(function (ch) {
+      var lo = 0, hi = len;
+      for (var k = 0; k < 22; k++) { var mid = (lo + hi) / 2; if (sp.getPointAtLength(mid).y > ch.y) lo = mid; else hi = mid; }
+      ch.len = (lo + hi) / 2; var pt = sp.getPointAtLength(ch.len);
+      var h = document.createElementNS(NS, "circle");
+      h.setAttribute("cx", pt.x.toFixed(1)); h.setAttribute("cy", pt.y.toFixed(1)); h.setAttribute("r", "17");
+      h.setAttribute("fill", ch.c); h.setAttribute("opacity", "0");
+      g.appendChild(h); ch.halo = h;
+      var c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", pt.x.toFixed(1)); c.setAttribute("cy", pt.y.toFixed(1)); c.setAttribute("r", "7");
+      c.setAttribute("fill", ch.c); c.setAttribute("opacity", "0.4");
+      g.appendChild(c); ch.el = c;
+    });
+  }
+  function lumDraw(len, p, fade) {
+    var sp = $("lum-spine"), pos = len * p, pt = sp.getPointAtLength(pos);
+    var sc = 0.8 + 0.5 * p, k = 1 - fade;
+    $("lum-light").setAttribute("transform", "translate(" + pt.x.toFixed(1) + " " + pt.y.toFixed(1) + ") scale(" + sc.toFixed(3) + ")");
+    $("lum-light").setAttribute("opacity", k.toFixed(3));
+    var best = 0, col = LUM_GOLD;
+    LUM_CH.forEach(function (ch) {
+      var d = Math.abs(pos - ch.len) / len, w = Math.max(0, 1 - d / 0.075); w = w * w * (3 - 2 * w);
+      if (w > best) { best = w; col = ch.c; }
+      if (ch.el) {
+        // allumé tant que la lumière est passée dessus à la montée ; s'éteint quand elle le dépasse à la descente
+        var m = len * 0.035, lit = Math.max(0, Math.min(1, (pos - ch.len + m * 0.5) / m)); lit = lit * lit * (3 - 2 * lit);
+        var kk = fade > 0 ? k : 1;
+        ch.el.setAttribute("opacity", ((0.38 + 0.62 * lit) * kk).toFixed(3));
+        ch.el.setAttribute("r", (7 + 1.5 * lit + 2 * w).toFixed(1));
+        ch.halo.setAttribute("opacity", ((0.32 * lit + 0.2 * w) * kk).toFixed(3));
+      }
+    });
+    var mix = mixHex(LUM_GOLD, col, best), st = $("lum-glow").getElementsByTagName("stop");
+    st[0].setAttribute("stop-color", mixHex(col, "#FFFFFF", 0.7 + 0.2 * (1 - best)));
+    st[1].setAttribute("stop-color", mix); st[2].setAttribute("stop-color", mix);
+    $("lum-core").setAttribute("fill", mixHex(col, "#FFFFFF", 0.85));
+    var tr = $("lum-trail");
+    tr.setAttribute("stroke-dasharray", len.toFixed(1)); tr.setAttribute("stroke-dashoffset", (len * (1 - p)).toFixed(1));
+    tr.setAttribute("opacity", (0.9 * k).toFixed(3));
+    var hp = Math.max(0, (p - 0.88) / 0.12);
+    $("lum-headglow").setAttribute("opacity", (ensEase(Math.min(1, hp)) * k).toFixed(3));
+  }
+  function lumGo() {
+    lumStop(); lumRun = true; lumShow("run");
+    var len = $("lum-spine").getTotalLength(), T1 = 4000, TH = 2000, T2 = 6000, N = 5, CYC = T1 + TH + T2, TOT = N * CYC, t0 = null, phase = "";
+    Array.prototype.forEach.call(document.querySelectorAll("audio"), function (o) { if (o.id.indexOf("lum-") !== 0) { try { o.pause(); } catch (e) {} } });
+    lumChakras(len); $("lum-cap").textContent = ""; lumDraw(len, 0, 0);
+    function frame(ts) {
+      if (t0 === null) t0 = ts;
+      var el = ts - t0;
+      if (el >= TOT) { lumFade(len); return; }
+      var w = el % CYC, ph, p;
+      if (w < T1) { ph = "in"; p = ensEase(w / T1); }
+      else if (w < T1 + TH) { ph = "hold"; p = 1; }
+      else { ph = "out"; p = 1 - ensEase((w - T1 - TH) / T2); }
+      if (ph !== phase) {
+        phase = ph;
+        if (ph === "in") { $("lum-cap").textContent = "La lumière monte…"; lumSound("lum-in", 0.6); }
+        else if (ph === "hold") { $("lum-cap").textContent = "Bloque…"; lumSound("lum-in", null); lumSound("lum-out", null); }
+        else if (ph === "out") { $("lum-cap").textContent = "La lumière redescend…"; lumSound("lum-out", 0.5); }
+      }
+      lumDraw(len, p, 0);
+      lumRaf = requestAnimationFrame(frame);
+    }
+    lumRaf = requestAnimationFrame(frame);
+  }
+  function lumFade(len) {
+    var t0 = null, D = 3200;
+    $("lum-cap").textContent = LUM_END;
+    function frame(ts) {
+      if (t0 === null) t0 = ts;
+      var f = Math.min(1, (ts - t0) / D);
+      lumDraw(len, 0, ensEase(f));
+      if (f >= 1) { lumRaf = 0; lumRun = false; lumShow("end"); return; }
+      lumRaf = requestAnimationFrame(frame);
+    }
+    lumRaf = requestAnimationFrame(frame);
+  }
+  function openLum() {
+    lumStop(); lumShow("intro");
+    lumFocus = document.activeElement;
+    $("sheet-lum").hidden = false;
+    document.body.style.overflow = "hidden";
+    pushSheet("poser/souffle-et-lumiere");
+    $("b-lum-close").focus();
+  }
+  function closeLum() {
+    lumStop();
+    $("sheet-lum").hidden = true;
+    document.body.style.overflow = "";
+    if (lumFocus && lumFocus.focus) { try { lumFocus.focus(); } catch (e) {} }
+  }
+  $("b-lum").addEventListener("click", openLum);
+  $("b-lum-close").addEventListener("click", requestClose);
+  $("b-lum-end").addEventListener("click", requestClose);
+  $("b-lum-go").addEventListener("click", lumGo);
+  $("b-lum-again").addEventListener("click", lumGo);
 
   // Réveil de nuit : un écran sombre, au choix une pluie fine, un ventilateur ou une voix (fichiers audio, l'écran peut se verrouiller)
   var nuitFocus = null;

@@ -470,6 +470,17 @@ body {
 .avr-opts b { display: block; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 20px; color: #E6C877; margin-bottom: 2px; }
 .avr-opts div span { font-size: 15px; line-height: 1.45; color: #F5E9DA; }
 #sheet-avr .ici-body { gap: 14px; }
+#sheet-ens { background: radial-gradient(540px 440px at 108% -6%, rgba(184,121,56,.78) 0%, rgba(184,121,56,.34) 32%, rgba(45,33,28,0) 100%), #2D211C; }
+#sheet-ens .ici-body { gap: 14px; }
+#sheet-ens .sheet-actions { flex-wrap: wrap; gap: 10px; }
+.ens-cards { display: flex; flex-direction: column; gap: 12px; }
+.ens-card { flex-direction: row !important; align-items: center !important; gap: 14px !important; margin-top: 0 !important; background: rgba(245,233,218,.07) !important; }
+.ens-card svg { flex: 0 0 64px; width: 64px; height: 64px; }
+.ens-card .ens-t { display: flex; flex-direction: column; gap: 4px; }
+.ens-stage { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ens-stage svg { width: min(80vw, 340px); height: auto; overflow: visible; }
+.ens-phase { margin: 0; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #D4AF37; min-height: 1.2em; }
+.ens-cap { margin: 0; text-align: center; text-wrap: balance; font-family: var(--display); font-style: italic; font-weight: 600; font-size: 32px; line-height: 1.2; color: #F5E9DA; min-height: 2.4em; }
 #sheet-avr .sheet-actions { flex-wrap: wrap; }
 #sheet-nuit { background: linear-gradient(180deg, #060A15 0%, #0B1630 55%, #14254A 100%); }
 #sheet-nuit::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -646,6 +657,10 @@ body {
       <span class="ici-name">Avant de répondre</span>
       <span class="ici-desc">Une pause quand un message remue et que les doigts sont déjà sur le clavier.</span>
     </button>
+    <button class="ici-card" id="b-ens" type="button">
+      <span class="ici-name">Souffler ensemble</span>
+      <span class="ici-desc">Quelques respirations à partager avec un enfant.</span>
+    </button>
     <button class="ici-card" id="b-nuit" type="button">
       <span class="ici-name">Réveil de nuit</span>
       <span class="ici-desc">Un écran sombre, une pluie fine, un ventilateur ou ma voix, pour quand les yeux se rouvrent en pleine nuit.</span>
@@ -709,6 +724,31 @@ body {
         <button class="btn" id="b-avr-next" type="button">Commencer</button>
         <button class="btn ghost" id="b-avr-stay" type="button" hidden>Rester un instant</button>
         <button class="btn ghost" id="b-avr-again" type="button" hidden>Refaire un tour</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet-ens" role="dialog" aria-modal="true" aria-labelledby="ens-title" hidden>
+    <div class="sheet-in">
+      <button class="back" id="b-ens-close" type="button">← Fermer</button>
+      <div class="ici-body">
+        <h3 id="ens-title"></h3>
+        <p id="ens-text" aria-live="polite"></p>
+        <div class="ens-cards" id="ens-cards" hidden></div>
+        <div class="ens-stage" id="ens-stage" hidden>
+          <svg id="ens-art" viewBox="0 0 300 300" role="img" aria-hidden="true"></svg>
+          <p class="ens-cap" id="ens-cap" aria-live="polite"></p>
+        </div>
+        <p class="small" id="ens-note" hidden></p>
+      </div>
+      <audio id="ens-breath" src="audio/inspire.mp3" preload="auto"></audio>
+      <audio id="ens-exhale" src="audio/expire.mp3" preload="auto"></audio>
+      <audio id="ens-exhale2" src="audio/souffle-bougie.mp3" preload="auto"></audio>
+      <audio id="ens-exhale3" src="audio/mmm.mp3" preload="auto"></audio>
+      <div class="row sheet-actions">
+        <button class="btn" id="b-ens-next" type="button">Commencer</button>
+        <button class="btn" id="b-ens-go" type="button" hidden>Continuer</button>
+        <button class="btn ghost" id="b-ens-other" type="button" hidden>Un autre jeu</button>
       </div>
     </div>
   </div>
@@ -969,8 +1009,8 @@ body {
     if (history.state && history.state.sheet) history.back(); else closeAllSheets();
   }
   $("b-close").addEventListener("click", requestClose);
-  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden || !$("sheet-avr").hidden || !$("sheet-nuit").hidden; }
-  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); if (!$("sheet-avr").hidden) closeAvr(); if (!$("sheet-nuit").hidden) closeNuit(); }
+  function anySheet() { return !$("sheet").hidden || !$("sheet-ici").hidden || !$("sheet-ret").hidden || !$("sheet-eft").hidden || !$("sheet-avr").hidden || !$("sheet-ens").hidden || !$("sheet-nuit").hidden; }
+  function closeAllSheets() { if (!$("sheet").hidden) closeSheet(); if (!$("sheet-ici").hidden) closeIci(); if (!$("sheet-ret").hidden) closeRet(); if (!$("sheet-eft").hidden) closeEft(); if (!$("sheet-avr").hidden) closeAvr(); if (!$("sheet-ens").hidden) closeEns(); if (!$("sheet-nuit").hidden) closeNuit(); }
   window.addEventListener("popstate", closeAllSheets);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && anySheet()) requestClose(); });
 
@@ -1388,6 +1428,198 @@ body {
   });
   $("b-avr-stay").addEventListener("click", function () { avrStep = 5; paintAvr(); });
   $("b-avr-again").addEventListener("click", function () { avrStep = 0; paintAvr(); });
+
+  // Souffler ensemble : D'abord toi, Inviter, trois jeux animés (un cycle à la fois), Rester
+  var ENS_TEXT = [
+    { w: "D’abord toi", t: "Pose tes pieds au sol. Laisse tes mains se poser. Prends une respiration tranquille, juste pour toi.", note: "Propose ce jeu à un moment où l’enfant a envie de le faire avec toi.", btn: "Commencer" },
+    { w: "Inviter", t: "Tu peux lui dire : « On souffle ensemble ? » Si l’enfant préfère te regarder ou t’écouter, ça va aussi.", btn: "Continuer" },
+    { w: "Choisir un jeu", t: "Touche le jeu que vous voulez essayer.", btn: "" },
+    { w: "Rester", t: "Vous pouvez rester un instant ensemble. Tu peux simplement être là.", btn: "Fermer" }
+  ];
+  var SVGN = "http://www.w3.org/2000/svg";
+  var ENS_GAMES = {
+    ballon: {
+      name: "Le ballon", desc: "Un ballon qui se gonfle et se dégonfle.",
+      sound: true, exhale: "ens-exhale", exhaleVol: 0.5,
+      consigne: "Regarde le ballon : il se gonfle quand l’air entre, il se dégonfle quand on souffle.",
+      inCap: "Le ballon se gonfle.", outCap: "Le ballon se dégonfle.",
+      thumb: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="26" rx="15" ry="19" fill="#C9784F"/><ellipse cx="26" cy="19" rx="3.5" ry="6" fill="#F5E9DA" fill-opacity=".3"/><path d="M32 45l-3 4h6z" fill="#A85A38"/><path d="M32 49c-3 4 3 7 0 12" stroke="#F5E9DA" stroke-opacity=".6" fill="none"/></svg>',
+      svg: '<defs><radialGradient id="gb" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#E39A74"/><stop offset=".55" stop-color="#C9784F"/><stop offset="1" stop-color="#8F4A2C"/></radialGradient><radialGradient id="gg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#B87938" stop-opacity=".6"/><stop offset="1" stop-color="#B87938" stop-opacity="0"/></radialGradient></defs>' +
+        '<circle id="a-glow" cx="150" cy="150" r="145" fill="url(#gg)" opacity="0"/>' +
+        '<path d="M150 262c-9 22 9 30-2 38" stroke="#F5E9DA" stroke-opacity=".55" fill="none" stroke-width="1.8"/>' +
+        '<g id="a-ball"><path d="M150 40c55 0 82 42 82 90 0 50-42 102-82 122-40-20-82-72-82-122 0-48 27-90 82-90z" fill="url(#gb)"/><path d="M150 252l-9 14h18z" fill="#A85A38"/><ellipse cx="116" cy="92" rx="16" ry="26" transform="rotate(25 116 92)" fill="#F5E9DA" fill-opacity=".28"/></g>',
+      update: function (art, p, inh, x, t) {
+        var sc = 0.5 + 0.5 * p;
+        art.querySelector("#a-ball").setAttribute("transform", "translate(150 262) scale(" + sc.toFixed(4) + ") translate(-150 -262)");
+        art.querySelector("#a-glow").setAttribute("opacity", (0.1 + 0.5 * p).toFixed(3));
+      }
+    },
+    fleur: {
+      name: "La fleur et la bougie", desc: "Une fleur à sentir, une flamme qui vacille.",
+      sound: true, exhale: "ens-exhale2", exhaleVol: 0.5,
+      consigne: "Sens la fleur quand l’air entre, souffle doucement sur la flamme.",
+      inCap: "On sent la fleur.", outCap: "On souffle sur la bougie.",
+      thumb: '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#F5E9DA"><ellipse cx="20" cy="18" rx="4.5" ry="9"/><ellipse cx="20" cy="18" rx="4.5" ry="9" transform="rotate(60 20 26)"/><ellipse cx="20" cy="18" rx="4.5" ry="9" transform="rotate(-60 20 26)"/></g><circle cx="20" cy="26" r="4" fill="#D4AF37"/><path d="M20 30v26" stroke="#7D6A3C" stroke-width="2"/><rect x="40" y="34" width="12" height="24" rx="2" fill="#E9D9BF"/><path d="M46 20c5 6 5 10 0 13-5-3-5-7 0-13z" fill="#D4AF37"/></svg>',
+      svg: (function () {
+        var pet = ""; for (var i = 0; i < 6; i++) pet += '<ellipse cx="92" cy="98" rx="17" ry="38" transform="rotate(' + (i * 60) + ' 92 138)" fill="#F5E9DA"/>';
+        return '<defs><radialGradient id="gg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#B87938" stop-opacity=".6"/><stop offset="1" stop-color="#B87938" stop-opacity="0"/></radialGradient></defs>' +
+        '<circle id="a-glowf" cx="92" cy="138" r="100" fill="url(#gg)" opacity="0"/>' +
+        '<circle id="a-glowc" cx="214" cy="148" r="70" fill="url(#gg)" opacity="0"/>' +
+        '<path d="M92 156c-3 44 5 76 0 116" stroke="#7D6A3C" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+        '<g id="a-flower">' + pet + '<circle cx="92" cy="138" r="17" fill="#D4AF37"/></g>' +
+        '<g id="a-candle"><rect x="190" y="182" width="48" height="94" rx="6" fill="#E9D9BF"/><ellipse cx="214" cy="182" rx="24" ry="5" fill="#F5E9DA"/><path d="M214 182v-14" stroke="#2D211C" stroke-width="3" stroke-linecap="round"/>' +
+        '<g id="a-flame"><path d="M214 112c20 24 20 44 0 58-20-14-20-34 0-58z" fill="#D4AF37"/><ellipse cx="214" cy="150" rx="7" ry="13" fill="#F3DC8A"/></g></g>';
+      })(),
+      update: function (art, p, inh, x, t) {
+        var fl = art.querySelector("#a-flower"), cd = art.querySelector("#a-candle"), fm = art.querySelector("#a-flame");
+        var f = inh ? p : p; // la fleur suit l'air qui entre, puis s'apaise
+        fl.setAttribute("transform", "translate(92 138) scale(" + (1 + 0.07 * f).toFixed(4) + ") translate(-92 -138)");
+        fl.setAttribute("opacity", (0.55 + 0.45 * f).toFixed(3));
+        art.querySelector("#a-glowf").setAttribute("opacity", (0.7 * f).toFixed(3));
+        var env = inh ? 0 : Math.sin(Math.PI * x);
+        cd.setAttribute("opacity", inh ? "0.55" : "1");
+        art.querySelector("#a-glowc").setAttribute("opacity", inh ? "0.1" : (0.15 + 0.45 * env).toFixed(3));
+        var ang = inh ? 2 * Math.sin(t * 2) : 22 * Math.sin(t * 8) * env + 2 * Math.sin(t * 2);
+        var sy = 1 - 0.12 * env;
+        fm.setAttribute("transform", "translate(214 170) rotate(" + ang.toFixed(2) + ") scale(1 " + sy.toFixed(3) + ") translate(-214 -170)");
+      }
+    },
+    abeille: {
+      name: "L’abeille", desc: "Une abeille qui se pose, des ailes qui vibrent.",
+      sound: true, exhale: "ens-exhale3", exhaleVol: 0.4, capIn: "On laisse l’air entrer…", capOut: "On fait mmm…",
+      consigne: "Laisse l’air entrer pendant que l’abeille se pose, puis fais mmm en soufflant.",
+      inCap: "On laisse l’air entrer.", outCap: "On fait mmm…",
+      thumb: '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="48" rx="20" ry="5" fill="#F5E9DA" fill-opacity=".8"/><ellipse cx="33" cy="34" rx="13" ry="10" fill="#D4AF37"/><rect x="31" y="25" width="4" height="18" fill="#2D211C" fill-opacity=".8"/><circle cx="21" cy="33" r="5" fill="#3A2A22"/><ellipse cx="34" cy="24" rx="9" ry="5" fill="#F5E9DA" fill-opacity=".75"/></svg>',
+      svg: '<defs><clipPath id="bc"><ellipse cx="150" cy="190" rx="38" ry="28"/></clipPath></defs>' +
+        '<g id="a-rings" fill="none" stroke="#D4AF37" stroke-width="2"><circle cx="150" cy="190" r="40"/><circle cx="150" cy="190" r="40"/><circle cx="150" cy="190" r="40"/></g>' +
+        '<ellipse cx="150" cy="232" rx="78" ry="16" fill="#F5E9DA" fill-opacity=".85"/>' +
+        '<g id="a-bee"><g id="a-wl"><ellipse cx="136" cy="150" rx="12" ry="28" fill="#F5E9DA" fill-opacity=".72"/></g><g id="a-wr"><ellipse cx="164" cy="150" rx="12" ry="28" fill="#F5E9DA" fill-opacity=".72"/></g>' +
+        '<ellipse cx="150" cy="190" rx="38" ry="28" fill="#D4AF37"/><g clip-path="url(#bc)"><rect x="140" y="160" width="11" height="62" fill="#2D211C" fill-opacity=".8"/><rect x="162" y="160" width="11" height="62" fill="#2D211C" fill-opacity=".8"/></g>' +
+        '<circle cx="114" cy="186" r="15" fill="#3A2A22"/><circle cx="109" cy="182" r="3" fill="#F5E9DA"/><path d="M188 190l12 3-12 4z" fill="#2D211C"/></g>',
+      update: function (art, p, inh, x, t) {
+        var bee = art.querySelector("#a-bee"), wl = art.querySelector("#a-wl"), wr = art.querySelector("#a-wr");
+        var dy = inh ? -52 * (1 - p) + 3 * Math.sin(t * 5) * (1 - p) : 0;
+        bee.setAttribute("transform", "translate(" + (inh ? 0 : (0.9 * Math.sin(t * 55) * Math.min(1, Math.sin(Math.PI * x) * 3))).toFixed(2) + " " + dy.toFixed(2) + ")");
+        var env = inh ? 0 : Math.sin(Math.PI * x);
+        var ang = inh ? (34 - 18 * p) + 4 * Math.sin(t * 6) * (1 - p) : 16 + 14 * Math.sin(t * 70) * Math.min(1, env * 3);
+        wl.setAttribute("transform", "rotate(" + (-ang).toFixed(2) + " 142 168)");
+        wr.setAttribute("transform", "rotate(" + ang.toFixed(2) + " 158 168)");
+        var rings = art.querySelectorAll("#a-rings circle");
+        Array.prototype.forEach.call(rings, function (c, k) {
+          if (inh) { c.setAttribute("opacity", "0"); return; }
+          var f = (x * 1.6 + k / 3) % 1;
+          c.setAttribute("r", (40 + 100 * f).toFixed(1));
+          c.setAttribute("opacity", (0.55 * (1 - f) * Math.min(1, env * 3)).toFixed(3));
+        });
+      }
+    }
+  };
+  var ENS_ORDER = ["ballon", "fleur", "abeille"];
+  var ensStep = 0, ensGame = null, ensFocus = null, ensRaf = 0, ensPhaseNow = "";
+  function ensEase(x) { return 0.5 - 0.5 * Math.cos(Math.PI * x); }
+  function ensStopAnim() {
+    if (ensRaf) { cancelAnimationFrame(ensRaf); ensRaf = 0; }
+    ["ens-breath", "ens-exhale", "ens-exhale2", "ens-exhale3"].forEach(function (id) { var a = $(id); if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} } });
+  }
+  function ensButtons(next, go, other) {
+    $("b-ens-next").hidden = !next; if (next) $("b-ens-next").textContent = next;
+    $("b-ens-go").hidden = !go;
+    $("b-ens-other").hidden = !other;
+    $("b-ens-next").parentNode.style.visibility = "";
+  }
+  function ensCards() {
+    var c = $("ens-cards"); c.innerHTML = "";
+    ENS_ORDER.forEach(function (k) {
+      var g = ENS_GAMES[k], b = document.createElement("button"), t = document.createElement("span"), n = document.createElement("span"), d = document.createElement("span");
+      b.type = "button"; b.className = "ici-card ens-card"; b.insertAdjacentHTML("afterbegin", g.thumb);
+      t.className = "ens-t"; n.className = "ici-name"; d.className = "ici-desc"; n.textContent = g.name; d.textContent = g.desc;
+      t.appendChild(n); t.appendChild(d); b.appendChild(t);
+      b.addEventListener("click", function () { ensGame = k; ensStep = 2; paintEns(); });
+      c.appendChild(b);
+    });
+  }
+  function ensSetPhase(inh, g) {
+    var key = inh ? "in" : "out";
+    if (key === ensPhaseNow) return;
+    ensPhaseNow = key;
+    $("ens-cap").textContent = inh ? (g.capIn || "L’air entre…") : (g.capOut || "On souffle doucement…");
+  }
+  function paintEns() {
+    ensStopAnim();
+    var st = ENS_TEXT[ensStep], game = (ensStep === 2 && ensGame) ? ENS_GAMES[ensGame] : null;
+    $("ens-title").textContent = game ? game.name : st.w;
+    $("ens-text").hidden = !!game; $("ens-text").textContent = st.t;
+    $("ens-cards").hidden = !(ensStep === 2 && !game);
+    if (ensStep === 2 && !game) ensCards();
+    $("ens-stage").hidden = !game;
+    $("ens-note").textContent = st.note || ""; $("ens-note").hidden = !st.note || !!game;
+    if (game) {
+      var art = $("ens-art"); art.innerHTML = game.svg; ensPhaseNow = "";
+      game.update(art, 0, true, 0, 0);
+      $("ens-cap").textContent = game.consigne;
+      ensButtons("Commencer", false, true);
+    } else if (ensStep === 2) ensButtons("", false, false);
+    else ensButtons(st.btn, false, false);
+    Array.prototype.forEach.call(document.querySelectorAll("#sheet-ens .ici-body > *"), function (el) { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+    $("sheet-ens").scrollTop = 0;
+  }
+  function ensRun() {
+    var g = ENS_GAMES[ensGame], art = $("ens-art"), T1 = 4000, T2 = 6000, t0 = null; var exhaleOn = false;
+    ensStopAnim(); ensPhaseNow = "";
+    ensButtons("Commencer", false, true);
+    $("b-ens-next").parentNode.style.visibility = "hidden";
+    function frame(ts) {
+      if (t0 === null) {
+        t0 = ts;
+        if (g.sound) {
+          var br = $("ens-breath");
+          Array.prototype.forEach.call(document.querySelectorAll("audio"), function (o) { if (o !== br && o.id.indexOf("ens-") !== 0) { try { o.pause(); } catch (e) {} } });
+          try { br.currentTime = 0; br.volume = 0.6; var pr = br.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+        }
+      }
+      var el = ts - t0, inh = el < T1;
+      var x = inh ? el / T1 : Math.min(1, (el - T1) / T2);
+      var p = inh ? ensEase(x) : 1 - ensEase(x);
+      if (!inh && g.exhale && !exhaleOn) {
+        exhaleOn = true;
+        Array.prototype.forEach.call(document.querySelectorAll("audio"), function (o) { if (o.id.indexOf("ens-") !== 0) { try { o.pause(); } catch (e) {} } });
+        try { var ex = $(g.exhale); ex.currentTime = 0; ex.volume = g.exhaleVol || 0.5; var pe = ex.play(); if (pe && pe.catch) pe.catch(function () {}); } catch (e) {}
+      }
+      ensSetPhase(inh, g);
+      g.update(art, p, inh, x, el / 1000);
+      if (el >= T1 + T2) {
+        ensRaf = 0;
+        $("ens-cap").textContent = "Encore une fois, ou on continue.";
+        ensButtons("Encore une fois", true, true);
+        return;
+      }
+      ensRaf = requestAnimationFrame(frame);
+    }
+    ensRaf = requestAnimationFrame(frame);
+  }
+  function openEns() {
+    ensStep = 0; ensGame = null; paintEns();
+    ensFocus = document.activeElement;
+    $("sheet-ens").hidden = false;
+    document.body.style.overflow = "hidden";
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    $("b-ens-close").focus();
+  }
+  function closeEns() {
+    ensStopAnim();
+    $("sheet-ens").hidden = true;
+    document.body.style.overflow = "";
+    if (ensFocus && ensFocus.focus) { try { ensFocus.focus(); } catch (e) {} }
+  }
+  $("b-ens").addEventListener("click", openEns);
+  $("b-ens-close").addEventListener("click", requestClose);
+  $("b-ens-next").addEventListener("click", function () {
+    if (ensStep === 2 && ensGame) { ensRun(); return; }
+    if (ensStep === 3) { requestClose(); return; }
+    ensStep++; paintEns();
+  });
+  $("b-ens-go").addEventListener("click", function () { ensStep = 3; ensGame = null; paintEns(); });
+  $("b-ens-other").addEventListener("click", function () { ensGame = null; ensStep = 2; paintEns(); });
 
   // Réveil de nuit : un écran sombre, au choix une pluie fine, un ventilateur ou une voix (fichiers audio, l'écran peut se verrouiller)
   var nuitFocus = null;

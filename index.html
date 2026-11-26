@@ -982,6 +982,16 @@ body {
   })();
   $("b-urgence").addEventListener("click", function () { openSheet(URGENCE, true); });
 
+  // Comptage sans cookie : chaque ouverture devient une « page vue » virtuelle dans Cloudflare (/v/nom)
+  function vueUrl(slug) { return "/v/" + slug + (location.hash || ""); }
+  function pushSheet(slug) { try { history.pushState({ sheet: 1 }, "", vueUrl(slug)); } catch (e) { try { history.pushState({ sheet: 1 }, ""); } catch (e2) {} } }
+  var vuesEcoute = {};
+  function compterEcoute(slug) {
+    if (vuesEcoute[slug]) return; vuesEcoute[slug] = true;
+    try { history.pushState({ vue: 1 }, "", vueUrl(slug)); history.back(); } catch (e) {}
+  }
+  function slugify(t) { return String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+
   // Fenêtre d'une respiration
   var lastFocus = null;
   var keepHist = false;
@@ -994,7 +1004,7 @@ body {
     $("sheet").hidden = false;
     $("sheet").scrollTop = 0;
     document.body.style.overflow = "hidden";
-    if (!keepHist) { try { history.pushState({ sheet: 1 }, ""); } catch (e) {} }
+    if (!keepHist) pushSheet("souffler/" + slugify(p.name));
     keepHist = false;
     $("b-close").focus();
     if (autostart) startBreath();
@@ -1114,7 +1124,7 @@ body {
     iciFocus = document.activeElement;
     $("sheet-ici").hidden = false; $("sheet-ici").scrollTop = 0;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    pushSheet("poser/revenir-ici");
     $("b-ici-close").focus();
   }
   function closeIci() {
@@ -1220,7 +1230,7 @@ body {
     retFocus = document.activeElement;
     $("sheet-ret").hidden = false; $("sheet-ret").scrollTop = 0;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    pushSheet("poser/retrouver");
     $("b-ret-close").focus();
   }
   function closeRet() {
@@ -1349,7 +1359,7 @@ body {
     eftFocus = document.activeElement;
     $("sheet-eft").hidden = false;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    pushSheet("poser/tapoter");
     $("b-eft-close").focus();
   }
   function closeEft() {
@@ -1411,7 +1421,7 @@ body {
     avrFocus = document.activeElement;
     $("sheet-avr").hidden = false;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    pushSheet("poser/avant-de-repondre");
     $("b-avr-close").focus();
   }
   function closeAvr() {
@@ -1604,7 +1614,7 @@ body {
     ensFocus = document.activeElement;
     $("sheet-ens").hidden = false;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    pushSheet("poser/souffler-ensemble");
     $("b-ens-close").focus();
   }
   function closeEns() {
@@ -1646,7 +1656,7 @@ body {
     paintNuit();
     $("sheet-nuit").hidden = false;
     document.body.style.overflow = "hidden";
-    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+    pushSheet("poser/reveil-de-nuit");
     $("b-nuit-play").focus();
   }
   function closeNuit() {
@@ -1960,6 +1970,7 @@ body {
         if (current === me && !audio.paused) { audio.pause(); me.idle(); return; }
         if (current && current !== me) stopAll();
         current = me;
+        compterEcoute("ecouter/" + slugify((k.src || k.t).replace(/^audio\//, "").replace(/\.mp3$/, "")));
         var dd = seenLoad();
         if (dd && k.src) { dd.heard = dd.heard || {}; dd.heard[k.src] = true; seenSave(dd); }
         var dot = t.querySelector(".new-dot"); if (dot) dot.remove();

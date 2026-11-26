@@ -555,7 +555,7 @@ body {
 #sheet-nuit .sheet-in { position: relative; z-index: 1; }
 #sheet-nuit .back { color: #8F7F69; }
 #sheet-nuit #nuit-text { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 28px; line-height: 1.35; color: #B9A88F; text-wrap: balance; text-align: center; margin: 0; }
-#sheet-nuit .sheet-actions { background: none; justify-content: center; }
+#sheet-nuit .sheet-actions { background: none; justify-content: center; flex-wrap: wrap; gap: 10px; }
 #sheet-nuit .btn { background: #000; color: #CFC4B4; border: 0; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) { #sheet-nuit .ici-body > * { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .tap-dot { transition: none; } .tap-dot.on { transform: none; } }
@@ -648,7 +648,7 @@ body {
     </button>
     <button class="ici-card" id="b-nuit" type="button">
       <span class="ici-name">Réveil de nuit</span>
-      <span class="ici-desc">Un écran sombre et une pluie fine, pour quand les yeux se rouvrent en pleine nuit.</span>
+      <span class="ici-desc">Un écran sombre, une pluie fine ou un ventilateur, pour quand les yeux se rouvrent en pleine nuit.</span>
     </button>
   </section>
 
@@ -720,9 +720,11 @@ body {
         <p id="nuit-text">Tu as rouvert les yeux en pleine nuit. Tu peux écouter un peu, les yeux fermés.</p>
       </div>
       <div class="row sheet-actions">
-        <button class="btn" id="b-nuit-play" type="button">Écouter le son</button>
+        <button class="btn" id="b-nuit-play" type="button">Écouter la pluie</button>
+        <button class="btn" id="b-nuit-play2" type="button">Écouter le ventilateur</button>
       </div>
       <audio id="nuit-audio" src="audio/nuit-4.mp3" preload="none"></audio>
+      <audio id="nuit-audio2" src="audio/nuit-ventilateur.mp3" preload="none"></audio>
     </div>
   </div>
 
@@ -1385,14 +1387,23 @@ body {
   $("b-avr-stay").addEventListener("click", function () { avrStep = 5; paintAvr(); });
   $("b-avr-again").addEventListener("click", function () { avrStep = 0; paintAvr(); });
 
-  // Réveil de nuit : un écran sombre, une pluie fine (fichier audio, l'écran peut se verrouiller)
+  // Réveil de nuit : un écran sombre, au choix une pluie fine ou un ventilateur (fichiers audio, l'écran peut se verrouiller)
   var nuitFocus = null;
+  var NUIT = [
+    { audio: "nuit-audio", btn: "b-nuit-play", label: "Écouter la pluie", title: "Réveil de nuit, pluie" },
+    { audio: "nuit-audio2", btn: "b-nuit-play2", label: "Écouter le ventilateur", title: "Réveil de nuit, ventilateur" }
+  ];
   function paintNuit() {
-    var a = $("nuit-audio"), playing = !a.paused && !a.ended;
-    $("b-nuit-play").textContent = playing ? "Arrêter" : "Écouter le son";
-    $("b-nuit-play").setAttribute("aria-pressed", playing ? "true" : "false");
+    NUIT.forEach(function (n) {
+      var a = $(n.audio), playing = !a.paused && !a.ended;
+      $(n.btn).textContent = playing ? "Arrêter" : n.label;
+      $(n.btn).setAttribute("aria-pressed", playing ? "true" : "false");
+    });
   }
-  function nuitStop() { var a = $("nuit-audio"); try { a.pause(); a.currentTime = 0; } catch (e) {} paintNuit(); }
+  function nuitStop() {
+    NUIT.forEach(function (n) { var a = $(n.audio); try { a.pause(); a.currentTime = 0; } catch (e) {} });
+    paintNuit();
+  }
   function openNuit() {
     nuitFocus = document.activeElement;
     paintNuit();
@@ -1409,22 +1420,24 @@ body {
   }
   $("b-nuit").addEventListener("click", openNuit);
   $("b-nuit-close").addEventListener("click", requestClose);
-  $("b-nuit-play").addEventListener("click", function () {
-    var a = $("nuit-audio");
-    if (!a.paused && !a.ended) { nuitStop(); return; }
-    Array.prototype.forEach.call(document.querySelectorAll("audio"), function (o) { if (o !== a) { try { o.pause(); } catch (e) {} } });
-    if (a.ended) a.currentTime = 0;
-    var pr = a.play(); if (pr && pr.catch) pr.catch(function () { paintNuit(); });
-    if ("mediaSession" in navigator) {
-      try {
-        navigator.mediaSession.metadata = new MediaMetadata({ title: "Réveil de nuit", artist: "Orée" });
-        navigator.mediaSession.setActionHandler("play", function () { a.play(); });
-        navigator.mediaSession.setActionHandler("pause", function () { a.pause(); });
-        navigator.mediaSession.setActionHandler("stop", function () { nuitStop(); });
-      } catch (e) {}
-    }
+  NUIT.forEach(function (n) {
+    $(n.btn).addEventListener("click", function () {
+      var a = $(n.audio);
+      if (!a.paused && !a.ended) { nuitStop(); return; }
+      Array.prototype.forEach.call(document.querySelectorAll("audio"), function (o) { if (o !== a) { try { o.pause(); if (o.id.indexOf("nuit-audio") === 0) o.currentTime = 0; } catch (e) {} } });
+      if (a.ended) a.currentTime = 0;
+      var pr = a.play(); if (pr && pr.catch) pr.catch(function () { paintNuit(); });
+      if ("mediaSession" in navigator) {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({ title: n.title, artist: "Orée" });
+          navigator.mediaSession.setActionHandler("play", function () { a.play(); });
+          navigator.mediaSession.setActionHandler("pause", function () { a.pause(); });
+          navigator.mediaSession.setActionHandler("stop", function () { nuitStop(); });
+        } catch (e) {}
+      }
+    });
+    ["play", "pause", "ended"].forEach(function (ev) { $(n.audio).addEventListener(ev, paintNuit); });
   });
-  ["play", "pause", "ended"].forEach(function (ev) { $("nuit-audio").addEventListener(ev, paintNuit); });
 
   // Sons : une inspiration qui monte, une expiration qui descend (générés dans l'appareil)
   var audioCtx = null, noiseBuf = null, curSnd = null, soundOn = true;

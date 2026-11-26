@@ -648,7 +648,7 @@ body {
     </button>
     <button class="ici-card" id="b-nuit" type="button">
       <span class="ici-name">Réveil de nuit</span>
-      <span class="ici-desc">Un écran sombre, une pluie fine ou un ventilateur, pour quand les yeux se rouvrent en pleine nuit.</span>
+      <span class="ici-desc">Un écran sombre, une pluie fine, un ventilateur ou ma voix, pour quand les yeux se rouvrent en pleine nuit.</span>
     </button>
   </section>
 
@@ -722,9 +722,11 @@ body {
       <div class="row sheet-actions">
         <button class="btn" id="b-nuit-play" type="button">Écouter la pluie</button>
         <button class="btn" id="b-nuit-play2" type="button">Écouter le ventilateur</button>
+        <button class="btn" id="b-nuit-play3" type="button">Écouter une voix</button>
       </div>
       <audio id="nuit-audio" src="audio/nuit-4.mp3" preload="none"></audio>
       <audio id="nuit-audio2" src="audio/nuit-ventilateur.mp3" preload="none"></audio>
+      <audio id="nuit-audio3" src="audio/nuit-voix.mp3" preload="none"></audio>
     </div>
   </div>
 
@@ -1387,11 +1389,12 @@ body {
   $("b-avr-stay").addEventListener("click", function () { avrStep = 5; paintAvr(); });
   $("b-avr-again").addEventListener("click", function () { avrStep = 0; paintAvr(); });
 
-  // Réveil de nuit : un écran sombre, au choix une pluie fine ou un ventilateur (fichiers audio, l'écran peut se verrouiller)
+  // Réveil de nuit : un écran sombre, au choix une pluie fine, un ventilateur ou une voix (fichiers audio, l'écran peut se verrouiller)
   var nuitFocus = null;
   var NUIT = [
     { audio: "nuit-audio", btn: "b-nuit-play", label: "Écouter la pluie", title: "Réveil de nuit, pluie" },
-    { audio: "nuit-audio2", btn: "b-nuit-play2", label: "Écouter le ventilateur", title: "Réveil de nuit, ventilateur" }
+    { audio: "nuit-audio2", btn: "b-nuit-play2", label: "Écouter le ventilateur", title: "Réveil de nuit, ventilateur" },
+    { audio: "nuit-audio3", btn: "b-nuit-play3", label: "Écouter une voix", title: "Réveil de nuit, voix" }
   ];
   function paintNuit() {
     NUIT.forEach(function (n) {

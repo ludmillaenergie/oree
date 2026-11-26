@@ -278,6 +278,8 @@ textarea::placeholder { color: var(--muted); }
 .play:disabled { background: transparent; color: var(--muted); border-style: dashed; border-color: var(--line); cursor: default; }
 .track .t { font-family: var(--display); font-style: italic; font-size: 25px; line-height: 1.15; }
 .track .s { font-size: 14px; color: var(--muted); }
+.new-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-left: 10px; vertical-align: middle; box-shadow: 0 0 8px rgba(212,175,55,.55); }
+.door .name .new-dot { width: 11px; height: 11px; margin-left: 12px; vertical-align: .18em; }
 .track.soon { grid-template-columns: 1fr; padding: 16px 18px; }
 .track .soon-tag { margin-top: 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
 .track .bar { grid-column: 2; height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
@@ -1629,17 +1631,44 @@ body {
   })();
 
   // Écouter : lecteur intégré, un seul audio à la fois.
-  // Renseigner src avec le chemin du fichier (ex. "audio/sommeil.mp3") quand l'enregistrement existe.
+  // Renseigner src avec le chemin du fichier (ex. "audio/sommeil.mp3") quand l'enregistrement existe,
+  // et added avec la date de mise en ligne (un point doré signale les audios arrivés après la première visite).
   var TRACKS = [
-    { t: "Entrer dans le sommeil", s: "Relaxation du soir", src: "audio/sommeil.mp3" },
-    { t: "Rendre à chacun ce qui est à lui", s: "Hypersensibilité et surcharge émotionnelle", src: "audio/rendre.mp3" },
-    { t: "Déposer la fatigue", s: "Repos et charge mentale", src: "audio/fatigue.mp3" },
+    { t: "Entrer dans le sommeil", s: "Relaxation du soir", src: "audio/sommeil.mp3", added: "2026-11-25T12:00:00Z" },
+    { t: "Rendre à chacun ce qui est à lui", s: "Hypersensibilité et surcharge émotionnelle", src: "audio/rendre.mp3", added: "2026-11-25T12:00:00Z" },
+    { t: "Déposer la fatigue", s: "Repos et charge mentale", src: "audio/fatigue.mp3", added: "2026-11-26T09:10:00Z" },
     { t: "Laisser tomber ce qui a fait son temps", s: "Lâcher-prise et fin de cycle", src: null },
     { t: "Retrouver la douceur envers soi", s: "Bienveillance et amour de soi", src: null },
     { t: "Rencontrer l'enfant intérieur", s: "Reconnexion à son enfant intérieur", src: null }
   ];
   var ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   var ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
+  // Petit point « nouveau » : mémorisé sur l'appareil seulement, rien n'est envoyé.
+  var SEEN_KEY = "oree-audios-v1", seenMem = null;
+  function seenLoad() {
+    var d = null;
+    try { var raw = localStorage.getItem(SEEN_KEY); d = raw ? JSON.parse(raw) : null; }
+    catch (e) { return seenMem; }
+    if (!d || typeof d.base !== "number") { d = { base: Date.now(), heard: {} }; seenSave(d); }
+    return d;
+  }
+  function seenSave(d) { seenMem = d; try { localStorage.setItem(SEEN_KEY, JSON.stringify(d)); } catch (e) {} }
+  function isNew(k) {
+    var d = seenLoad();
+    if (!d || !k.src || !k.added) return false;
+    return Date.parse(k.added) > d.base && !(d.heard && d.heard[k.src]);
+  }
+  function makeDot() {
+    var d = document.createElement("span"); d.className = "new-dot";
+    d.setAttribute("role", "img"); d.setAttribute("aria-label", "nouveau");
+    return d;
+  }
+  function refreshDoorDot() {
+    var name = document.querySelector('.door[data-go="ecouter"] .name');
+    if (!name) return;
+    var old = name.querySelector(".new-dot"); if (old) old.remove();
+    if (TRACKS.some(isNew)) name.appendChild(makeDot());
+  }
   var current = null;
   function stopAll() {
     if (current) { current.audio.pause(); current.idle(); current = null; }
@@ -1652,6 +1681,7 @@ body {
       var t = document.createElement("div"); t.className = "t"; t.textContent = k.t;
       var s = document.createElement("div"); s.className = "s"; s.textContent = k.s;
       box.appendChild(t); box.appendChild(s);
+      if (isNew(k)) t.appendChild(makeDot());
       if (!k.src) {
         li.className = "track soon";
         var soon = document.createElement("div"); soon.className = "soon-tag"; soon.textContent = "Bientôt disponible";
@@ -1678,11 +1708,16 @@ body {
         if (current === me && !audio.paused) { audio.pause(); me.idle(); return; }
         if (current && current !== me) stopAll();
         current = me;
+        var dd = seenLoad();
+        if (dd && k.src) { dd.heard = dd.heard || {}; dd.heard[k.src] = true; seenSave(dd); }
+        var dot = t.querySelector(".new-dot"); if (dot) dot.remove();
+        refreshDoorDot();
         var p = audio.play();
         if (p && p.catch) p.catch(function () { me.idle(); });
         btn.innerHTML = ICON_PAUSE; btn.setAttribute("aria-label", "Mettre en pause : " + k.t);
       });
     });
+    refreshDoorDot();
   })();
 
   // Carnet : stocké sur l'appareil
